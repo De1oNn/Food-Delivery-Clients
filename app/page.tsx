@@ -32,11 +32,10 @@ export default function Page() {
         <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-8 rounded-[100px] text-center h-[40%] w-[25%] absolute">
           <div className="p-[20px] h-[100%] w-[100%] flex flex-col justify-between">
             <h1 className="text-[40px] font-bold text-[white]">
-              We serve incomparable delicacies
+              Delicious Meals, Delivered
             </h1>
             <p className="text-[white] text-1xl">
-              All the best restaurants with their top menu waiting for you, they
-              cant’t wait for your order!!
+              Order from the best restaurants near you with just a few clicks.
             </p>
             <div className="h-[20px] w-[100%] flex justify-center items-center gap-2">
               <div className="h-[10px] w-[50px] bg-[white] rounded-4xl"></div>
@@ -60,11 +59,10 @@ export default function Page() {
         <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-8 rounded-[100px] text-center h-[40%] w-[25%] absolute">
           <div className="p-[20px] h-[100%] w-[100%] flex flex-col justify-between">
             <h1 className="text-[40px] font-bold text-[white]">
-              We serve incomparable delicacies
+              Fast & Fresh Delivery
             </h1>
             <p className="text-[white] text-1xl">
-              All the best restaurants with their top menu waiting for you, they
-              cant’t wait for your order!!
+              Your favorite dishes arrive hot and fresh at your doorstep.
             </p>
             <div className="h-[20px] w-[100%] flex justify-center items-center gap-2">
               <div className="h-[10px] w-[50px] bg-[gray] rounded-4xl"></div>
@@ -95,11 +93,10 @@ export default function Page() {
           {/* Content */}
           <div className="p-[20px] h-[100%] w-[100%] flex flex-col justify-between">
             <h1 className="text-[40px] font-bold text-[white]">
-              We serve incomparable delicacies
+              Get Started Today!
             </h1>
             <p className="text-[white] text-1xl">
-              All the best restaurants with their top menu waiting for you, they
-              cant’t wait for your order!!
+              Sign up now and enjoy exclusive deals and discounts.
             </p>
             <div className="h-[20px] w-[100%] flex justify-center items-center gap-2">
               <div className="h-[10px] w-[50px] bg-[gray] rounded-4xl"></div>

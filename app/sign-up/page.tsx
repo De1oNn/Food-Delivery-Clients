@@ -25,7 +25,7 @@ export default function Signup() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/auth/sign-up", {
+      const response = await fetch("http://localhost:5000/user/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -33,10 +33,12 @@ export default function Signup() {
 
       const data = await response.json();
       if (response.ok) {
-        setMessage(data.message || "login successful!");
-        router.push("/hello");
-        if (data.token) {
-          localStorage.setItem("token", data.token); 
+        setMessage(data.message);
+        const userId = data.user?._id;
+        if (userId) {
+          router.push(`/hello?userId=${userId}`); 
+        } else {
+          setError("User ID not returned from server");
         }
       } else {
         setError(data.message || "Signup failed");

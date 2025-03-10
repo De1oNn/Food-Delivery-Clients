@@ -14,14 +14,13 @@ export default function Login() {
     setMessage("");
     setError("");
 
-    // Basic validation
     if (!email || !password) {
       setError("Please enter both email and password");
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:5000/auth/log-in", {
+      const response = await fetch("http://localhost:5000/user/log-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
