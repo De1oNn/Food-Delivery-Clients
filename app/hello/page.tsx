@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export default function Hello() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
-  const router = useRouter();
-  const { userId } = router.query || {};
+  const searchParams = useSearchParams();
+  const userId = searchParams.get("userId"); // Get userId from query string
 
   useEffect(() => {
     if (userId) {

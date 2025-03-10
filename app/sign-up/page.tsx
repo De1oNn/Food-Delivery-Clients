@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Signup() {
@@ -9,11 +9,6 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  // Debug component mount
-  useEffect(() => {
-    console.log("Signup component mounted");
-  }, []);
 
   const handleSignup = async () => {
     setMessage("");
@@ -32,11 +27,12 @@ export default function Signup() {
       });
 
       const data = await response.json();
+
       if (response.ok) {
         setMessage(data.message);
-        const userId = data.user?._id;
+        const userId = data.user.id; // Use 'id' instead of '_id' since it's being returned as 'id'
         if (userId) {
-          router.push(`/hello?userId=${userId}`); 
+          router.push(`/hello?userId=${userId}`); // Redirect with userId as query parameter
         } else {
           setError("User ID not returned from server");
         }

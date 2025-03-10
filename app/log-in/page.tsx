@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Login() {
-    const router = useRouter();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -21,6 +21,7 @@ export default function Login() {
 
     try {
       const response = await fetch("http://localhost:5000/user/log-in", {
+        // Updated endpoint
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -29,9 +30,14 @@ export default function Login() {
       const data = await response.json();
       if (response.ok) {
         setMessage(data.message || "Login successful!");
-        router.push("/hello")
-        if (data.token) {
-          localStorage.setItem("token", data.token); 
+        const userId = data.user?.id; // Extract userId
+        if (userId) {
+          if (data.token) {
+            localStorage.setItem("token", data.token); // Store token
+          }
+          router.push(`/hello?userId=${userId}`); // Redirect with userId
+        } else {
+          setError("User ID not returned from server");
         }
       } else {
         setError(data.message || "Login failed");
@@ -40,22 +46,23 @@ export default function Login() {
       setError("Network error. Please try again later.");
     }
   };
-  const handleback = () => {
-    router.push("/")
-  }
+
+  const handleBack = () => {
+    router.push("/");
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="relative max-w-md w-full bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20">
-        <div className="absolute -top-2 left-2 w-full h-full bg-white/10 rounded-3xl shadow-lg blur-md">
-        </div>
+        <div className="absolute -top-2 left-2 w-full h-full bg-white/10 rounded-3xl shadow-lg blur-md"></div>
         <h1 className="text-3xl font-bold text-white text-center mb-6 drop-shadow-md">
           Welcome back!
         </h1>
         <button
-          className="absolute top-4 right-4 text-white text-xl font-bold hover:text-gray-300 transition-all duration-200 " 
-          onClick={handleback}>
-            X
+          className="absolute top-4 right-4 text-white text-xl font-bold hover:text-gray-300 transition-all duration-200"
+          onClick={handleBack}
+        >
+          X
         </button>
         <div className="space-y-6">
           <div className="relative">
