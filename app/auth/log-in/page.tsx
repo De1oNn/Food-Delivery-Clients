@@ -10,8 +10,7 @@ export default function Login() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setMessage("");
     setError("");
 
@@ -40,7 +39,7 @@ export default function Login() {
           setError("User ID not returned from server");
         }
       } else {
-        setError(data.message || "Signup failed");
+        setError(data.message || "Login failed");
       }
     } catch (err) {
       setError("An error occurred. Please try again later.");
@@ -52,9 +51,8 @@ export default function Login() {
     router.push("/");
   };
 
-  // JSX remains the same
   return (
-<div className="min-h-screen flex items-center justify-center bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="relative max-w-md w-full bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20">
         <div className="absolute -top-2 left-2 w-full h-full bg-white/10 rounded-3xl shadow-lg blur-md"></div>
         <h1 className="text-3xl font-bold text-white text-center mb-6 drop-shadow-md">
@@ -66,7 +64,13 @@ export default function Login() {
         >
           X
         </button>
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin();
+          }}
+          className="space-y-6"
+        >
           <div className="relative">
             <label className="block text-sm font-medium text-gray-300">
               Email
@@ -94,7 +98,7 @@ export default function Login() {
           </div>
 
           <button
-            type="submit" // Changed to submit
+            type="submit"
             className="w-full p-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform active:scale-95 transition-all duration-300 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-purple-700"
           >
             Log In

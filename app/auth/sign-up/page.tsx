@@ -10,8 +10,7 @@ export default function Signup() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const handleSignup = async (e) => {
-    e.preventDefault(); // Prevent default form submission
+  const handleSignup = async () => {
     setMessage("");
     setError("");
 
@@ -66,7 +65,13 @@ export default function Signup() {
           Create Account
         </h1>
 
-        <form onSubmit={handleSignup} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSignup();
+          }}
+          className="space-y-6"
+        >
           <div className="relative">
             <label className="block text-sm font-medium text-gray-300">
               Email
@@ -94,7 +99,7 @@ export default function Signup() {
           </div>
 
           <button
-            type="submit" // Changed to type="submit"
+            type="submit"
             className="w-full p-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform active:scale-95 transition-all duration-300 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-purple-700"
           >
             Sign Up
