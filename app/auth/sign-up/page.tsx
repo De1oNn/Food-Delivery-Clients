@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Login() {
+export default function Signup() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = async () => {
+  const handleSignup = async (e) => {
+    e.preventDefault(); // Prevent default form submission
     setMessage("");
     setError("");
 
@@ -20,30 +21,29 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/user/log-in", {
-        // Updated endpoint
+      const response = await fetch("http://localhost:5000/auth/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
+
       if (response.ok) {
-        setMessage(data.message || "Login successful!");
-        const userId = data.user?.id; // Extract userId
+        setMessage(data.message);
+        const userId = data.user?.id; // Safely access 'id'
         if (userId) {
-          if (data.token) {
-            localStorage.setItem("token", data.token); // Store token
-          }
-          router.push(`/hello?userId=${userId}`); // Redirect with userId
+          setTimeout(() => {
+            router.push(`/hello?userId=${userId}`); // Delay redirect to show message
+          }, 1000); // 1-second delay
         } else {
           setError("User ID not returned from server");
         }
       } else {
-        setError(data.message || "Login failed");
+        setError(data.message || "Signup failed");
       }
     } catch (err) {
-      setError("Network error. Please try again later.");
+      setError("Network error. Please check your backend server.");
     }
   };
 
@@ -54,17 +54,19 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="relative max-w-md w-full bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20">
-        <div className="absolute -top-2 left-2 w-full h-full bg-white/10 rounded-3xl shadow-lg blur-md"></div>
-        <h1 className="text-3xl font-bold text-white text-center mb-6 drop-shadow-md">
-          Welcome back!
-        </h1>
+        <div className="absolute -top-2 left-2 w-full h-full bg-white/10 rounded-3xl shadow-lg blur-md pointer-events-none"></div>
         <button
-          className="absolute top-4 right-4 text-white text-xl font-bold hover:text-gray-300 transition-all duration-200"
           onClick={handleBack}
+          className="absolute top-4 right-4 text-white text-xl font-bold hover:text-gray-300 transition-all duration-200 z-10"
         >
           X
         </button>
-        <div className="space-y-6">
+
+        <h1 className="text-3xl font-bold text-white text-center mb-6 drop-shadow-md">
+          Create Account
+        </h1>
+
+        <form onSubmit={handleSignup} className="space-y-6">
           <div className="relative">
             <label className="block text-sm font-medium text-gray-300">
               Email
@@ -92,12 +94,12 @@ export default function Login() {
           </div>
 
           <button
-            onClick={handleLogin}
+            type="submit" // Changed to type="submit"
             className="w-full p-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform active:scale-95 transition-all duration-300 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-purple-700"
           >
-            Log In
+            Sign Up
           </button>
-        </div>
+        </form>
 
         {message && (
           <p className="mt-4 text-green-400 text-center">{message}</p>

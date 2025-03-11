@@ -117,13 +117,13 @@ export default function Page() {
           <div className="mt-6 flex justify-center gap-4 z-10">
             <button
               className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-md h-12 w-24 font-semibold hover:from-blue-600 hover:to-cyan-600 hover:scale-105 transition-all duration-300 shadow-md"
-              onClick={() => router.push("/sign-up")}
+              onClick={() => router.push("/auth/sign-up")}
             >
               Sign-Up
             </button>
             <button
               className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-md h-12 w-24 font-semibold hover:from-purple-600 hover:to-pink-600 hover:scale-105 transition-all duration-300 shadow-md"
-              onClick={() => router.push("/log-in")}
+              onClick={() => router.push("/auth/log-in")}
             >
               Log-In
             </button>

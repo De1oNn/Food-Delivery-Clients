@@ -7,13 +7,25 @@ export default function Hello() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
-  const userId = searchParams.get("userId"); // Get userId from query string
+  const userId = searchParams.get("userId");
 
   useEffect(() => {
     if (userId) {
-      fetch(`http://localhost:5000/auth/${userId}`)
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("No token found. Please log in again.");
+        return;
+      }
+
+      fetch(`http://localhost:5000/auth/${userId}`, {
+        // Updated URL
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
         .then((res) => {
-          if (!res.ok) throw new Error("Failed to fetch user");
+          if (!res.ok) throw new Error(`Failed to fetch user: ${res.status}`);
           return res.json();
         })
         .then((data) => setUser(data))
@@ -24,7 +36,7 @@ export default function Hello() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
       <div className="text-center p-6 bg-gray-800 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-4">Hello! Signup Successful!</h1>
+        <h1 className="text-3xl font-bold mb-4">Hello! Login Successful!</h1>
         {user ? (
           <div>
             <p className="text-lg">Welcome, {user.email}!</p>
