@@ -33,7 +33,7 @@ export default function Login() {
         const userId = data.user?.id; // Safely access 'id'
         if (userId) {
           setTimeout(() => {
-            router.push(`/hello?userId=${userId}`); // Delay redirect to show message
+            router.push(`/dashboard/${userId}`); // Delay redirect to show message
           }, 1000); // 1-second delay
         } else {
           setError("User ID not returned from server");
@@ -64,13 +64,7 @@ export default function Login() {
         >
           X
         </button>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleLogin();
-          }}
-          className="space-y-6"
-        >
+        <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-6">
           <div className="relative">
             <label className="block text-sm font-medium text-gray-300">
               Email

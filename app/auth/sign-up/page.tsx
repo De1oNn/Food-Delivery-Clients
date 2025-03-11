@@ -33,8 +33,8 @@ export default function Signup() {
         const userId = data.user?.id; // Safely access 'id'
         if (userId) {
           setTimeout(() => {
-            router.push(`/hello?userId=${userId}`); // Delay redirect to show message
-          }, 1000); // 1-second delay
+            router.push(`/dashboard/${userId}`); // Delay redirect to show message
+          }, 1000); 
         } else {
           setError("User ID not returned from server");
         }
