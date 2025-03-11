@@ -3,8 +3,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
+// Define the shape of the user object
+interface User {
+  _id: string;
+  email: string;
+}
+
 export default function Hello() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null); // Explicitly type user
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
@@ -18,7 +24,6 @@ export default function Hello() {
       }
 
       fetch(`http://localhost:5000/auth/${userId}`, {
-        // Updated URL
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
