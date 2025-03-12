@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
-// Define the shape of the user object
 interface User {
   _id: string;
   email: string;
