@@ -7,15 +7,20 @@ export default function Signup() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignup = async () => {
     setMessage("");
     setError("");
+    setIsLoading(true);
 
-    if (!email || !password) {
-      setError("Please enter both email and password");
+    if (!email || !password || !name || !phoneNumber) {
+      setError("Please fill in all fields");
+      setIsLoading(false);
       return;
     }
 
@@ -23,26 +28,26 @@ export default function Signup() {
       const response = await fetch("http://localhost:5000/auth/sign-up", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, name, phoneNumber }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         setMessage(data.message);
-        const userId = data.user?.id; // Safely access 'id'
-        if (userId) {
-          setTimeout(() => {
-            router.push(`/dashboard/${userId}`); // Delay redirect to show message
-          }, 1000); 
-        } else {
-          setError("User ID not returned from server");
-        }
+        localStorage.setItem("token", data.token); // Store token
+        localStorage.setItem("user", JSON.stringify(data.user)); // Store user data
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1000);
       } else {
         setError(data.message || "Signup failed");
       }
     } catch (err) {
       setError("Network error. Please check your backend server.");
+      console.error("Signup error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,6 +62,7 @@ export default function Signup() {
         <button
           onClick={handleBack}
           className="absolute top-4 right-4 text-white text-xl font-bold hover:text-gray-300 transition-all duration-200 z-10"
+          disabled={isLoading}
         >
           X
         </button>
@@ -73,36 +79,63 @@ export default function Signup() {
           className="space-y-6"
         >
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-300">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-300">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-2 block w-full p-3 rounded-xl bg-gray-800/50 text-white shadow-inner border border-gray-500 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all"
               required
+              disabled={isLoading}
             />
           </div>
 
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-300">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-300">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-2 block w-full p-3 rounded-xl bg-gray-800/50 text-white shadow-inner border border-gray-500 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all"
               required
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-300">Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-2 block w-full p-3 rounded-xl bg-gray-800/50 text-white shadow-inner border border-gray-500 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all"
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-300">Phone Number</label>
+            <input
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="mt-2 block w-full p-3 rounded-xl bg-gray-800/50 text-white shadow-inner border border-gray-500 focus:outline-none focus:ring-4 focus:ring-blue-400 transition-all"
+              required
+              disabled={isLoading}
             />
           </div>
 
           <button
             type="submit"
-            className="w-full p-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform active:scale-95 transition-all duration-300 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-purple-700"
+            className={`w-full p-3 rounded-xl text-white font-semibold bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg transform transition-all duration-300 ${
+              isLoading
+                ? "opacity-50 cursor-not-allowed"
+                : "active:scale-95 hover:shadow-blue-500/50 hover:from-blue-600 hover:to-purple-700"
+            }`}
+            disabled={isLoading}
           >
-            Sign Up
+            {isLoading ? "Signing Up..." : "Sign Up"}
           </button>
         </form>
 
