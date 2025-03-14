@@ -35,7 +35,7 @@ export default function Signup() {
 
       if (response.ok) {
         setMessage(data.message);
-        localStorage.setItem("token", data.token); // Store token
+        localStorage.setItem("token", data.token); 
         localStorage.setItem("user", JSON.stringify(data.user)); // Store user data
         setTimeout(() => {
           router.push("/dashboard");

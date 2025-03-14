@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface User {
   _id: string;
@@ -107,6 +108,9 @@ export default function Dashboard() {
       setIsUpdating(false);
     }
   };
+  const profile =() => {
+    router.push("./dashboard/profile")
+  }
 
   // Rest of your JSX remains largely the same, with minor improvements:
   return (
@@ -120,6 +124,10 @@ export default function Dashboard() {
         >
           Logout
         </button>
+        <Avatar onClick={profile}>
+          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+          <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
       </div>
       <div className="flex flex-col items-center justify-center">
         <div className="text-center mb-6">
@@ -141,7 +149,9 @@ export default function Dashboard() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className={`p-2 bg-gray-700 text-white rounded ${error && !formData.name ? 'border-red-500 border' : ''}`}
+                    className={`p-2 bg-gray-700 text-white rounded ${
+                      error && !formData.name ? "border-red-500 border" : ""
+                    }`}
                     placeholder="Enter your name"
                     disabled={isUpdating}
                   />
@@ -150,16 +160,22 @@ export default function Dashboard() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`p-2 bg-gray-700 text-white rounded ${error && !formData.email ? 'border-red-500 border' : ''}`}
+                    className={`p-2 bg-gray-700 text-white rounded ${
+                      error && !formData.email ? "border-red-500 border" : ""
+                    }`}
                     placeholder="Enter your email"
                     disabled={isUpdating}
                   />
                   <input
-                    type="tel" // Changed to tel for better phone number input
+                    type="tel"
                     name="phoneNumber"
                     value={formData.phoneNumber}
                     onChange={handleChange}
-                    className={`p-2 bg-gray-700 text-white rounded ${error && !formData.phoneNumber ? 'border-red-500 border' : ''}`}
+                    className={`p-2 bg-gray-700 text-white rounded ${
+                      error && !formData.phoneNumber
+                        ? "border-red-500 border"
+                        : ""
+                    }`}
                     placeholder="Enter your phone number"
                     disabled={isUpdating}
                   />
@@ -185,7 +201,9 @@ export default function Dashboard() {
                   <p className="text-lg">Welcome, {user.name}!</p>
                   <p className="text-sm text-gray-400">Email: {user.email}</p>
                   <p className="text-sm text-gray-400">User ID: {user._id}</p>
-                  <p className="text-sm text-gray-400">Phone: {user.phoneNumber}</p>
+                  <p className="text-sm text-gray-400">
+                    Phone: {user.phoneNumber}
+                  </p>
                   {user.createdAt && (
                     <p className="text-sm text-gray-400">
                       Joined: {new Date(user.createdAt).toLocaleDateString()}
@@ -204,7 +222,13 @@ export default function Dashboard() {
             <p className="text-lg">No user data available.</p>
           )}
           {error && (
-            <p className={`mt-4 ${error.includes('successfully') ? 'text-green-500' : 'text-red-500'}`}>
+            <p
+              className={`mt-4 ${
+                error.includes("successfully")
+                  ? "text-green-500"
+                  : "text-red-500"
+              }`}
+            >
               {error}
             </p>
           )}
