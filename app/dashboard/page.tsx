@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bell } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 
 interface User {
   _id: string;
@@ -48,14 +50,6 @@ export default function Dashboard() {
     }
     setIsLoading(false);
   }, [router]);
-
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      router.push("/auth/log-in");
-    }
-  };
 
   const handleEditToggle = () => {
     setEditing(!editing);
@@ -116,18 +110,20 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-900 text-white grid grid-cols-[100px_1fr] grid-rows-[100px_1fr] gap-4 p-4">
       <div className="h-screen w-[100px] bg-red-500 row-span-2"></div>
-      <div className="w-full h-[100px] bg-yellow-500 flex justify-end items-center pr-4">
-        <button
-          onClick={handleLogout}
-          className="p-2 bg-red-600 rounded-lg hover:bg-red-700 transition-all disabled:bg-red-400"
-          disabled={isUpdating}
-        >
-          Logout
-        </button>
-        <Avatar onClick={profile}>
-          <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
+      <div className="w-full bg-yellow-500 flex justify-end items-center pr-4">
+        <div className="flex justify-between w-[200px]">
+          <div>
+            <Bell  className="hover:text-[#EA6A12]"/>
+            <ShoppingCart />
+          </div>
+          <Avatar onClick={profile}>
+            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          <div>
+            {user ? <div>{user.name}</div> : <p>No user</p>}
+          </div>
+        </div>
       </div>
       <div className="flex flex-col items-center justify-center">
         <div className="text-center mb-6">
