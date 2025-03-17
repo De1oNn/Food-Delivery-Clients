@@ -105,6 +105,9 @@ export default function Dashboard() {
   const profile =() => {
     router.push("./dashboard/profile")
   }
+  const order = () => {
+    router.push("/order")
+  }
 
   // Rest of your JSX remains largely the same, with minor improvements:
   return (
@@ -125,11 +128,15 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      
       <div className="flex flex-col items-center justify-center">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold">
             Food<u className="text-green-500">Board</u>
           </h1>
+          <button onClick={order}>
+            order
+          </button>
           <div className="h-[1px] w-20 bg-white mx-auto mt-2"></div>
         </div>
         <div className="text-center p-6 bg-gray-800 rounded-lg shadow-lg w-full max-w-md">

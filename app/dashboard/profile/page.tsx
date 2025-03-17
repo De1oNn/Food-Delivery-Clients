@@ -189,9 +189,11 @@ export default function profile() {
     
     return (
       <div className="max-w-md mx-auto p-6 bg-gray-800 rounded-xl shadow-lg">
-        <button className="bg-[black] h-[40px] w-[40px] rounded-2xl text-[white] flex justify-center items-center"
-        onClick={backDashboard}>
-            x
+        <button
+          className="bg-[black] h-[40px] w-[40px] rounded-2xl text-[white] flex justify-center items-center"
+          onClick={backDashboard}
+        >
+          x
         </button>
         {isLoading ? (
           <p className="text-lg text-gray-300 text-center animate-pulse">
@@ -284,7 +286,32 @@ export default function profile() {
                   placeholder="Enter your name"
                   disabled={isUpdating}
                 />
-                {/* ... other input fields remain the same ... */}
+                <input
+                  type="text"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`p-3 bg-gray-700 text-white rounded-lg border-2 ${
+                    error && !formData.name
+                      ? "border-red-500"
+                      : "border-gray-600 focus:border-blue-500"
+                  } focus:outline-none transition-colors duration-200`}
+                  placeholder="Enter your name"
+                  disabled={isUpdating}
+                />
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  className={`p-3 bg-gray-700 text-white rounded-lg border-2 ${
+                    error && !formData.name
+                      ? "border-red-500"
+                      : "border-gray-600 focus:border-blue-500"
+                  } focus:outline-none transition-colors duration-200`}
+                  placeholder="Enter your name"
+                  disabled={isUpdating}
+                />
                 <div className="flex gap-3">
                   <button
                     onClick={handleUpdate}
