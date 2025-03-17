@@ -6,6 +6,8 @@ interface Food {
   _id: string;
   name: string;
   price: number;
+  imageUrl: string;
+  ingredients: string | string[] | undefined;
 }
 
 interface SelectedFood {
@@ -25,9 +27,7 @@ export default function Order() {
 
   const getFoods = async () => {
     try {
-      const res = await axios.get<{ foods: Food[] }>(
-        "http://localhost:5000/food"
-      );
+      const res = await axios.get<{ foods: Food[] }>("http://localhost:5000/food");
       setFoods(res.data.foods);
     } catch (error) {
       console.error("Error fetching foods:", error);
@@ -48,6 +48,26 @@ export default function Order() {
     } else {
       newSelectedFoods = [...selectedFoods, { food, quantity }];
     }
+    setSelectedFoods(newSelectedFoods.filter(item => item.quantity > 0)); // Remove items with quantity 0
+    setTotalPrice(
+      newSelectedFoods.reduce(
+        (sum, item) => sum + item.food.price * item.quantity,
+        0
+      )
+    );
+  };
+
+  const handleDecreaseQuantity = (foodId: string) => {
+    handleFoodSelect(
+      selectedFoods.find((item) => item.food._id === foodId)!.food,
+      -1
+    );
+  };
+
+  const handleDeleteFood = (foodId: string) => {
+    const newSelectedFoods = selectedFoods.filter(
+      (item) => item.food._id !== foodId
+    );
     setSelectedFoods(newSelectedFoods);
     setTotalPrice(
       newSelectedFoods.reduce(
@@ -101,19 +121,43 @@ export default function Order() {
             {foods.map((food) => (
               <div
                 key={food._id}
-                className="flex justify-between items-center p-4 bg-white rounded-lg shadow-md"
+                className="flex flex-col p-4 bg-white rounded-lg shadow-md"
               >
-                <p className="text-lg text-gray-800">
-                  {food.name} -{" "}
-                  <span className="font-medium">${food.price}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center">
+                    <img
+                      src={food.imageUrl}
+                      alt={food.name}
+                      className="w-16 h-16 object-cover rounded mr-4"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder.jpg";
+                      }}
+                    />
+                    <div>
+                      <p className="text-lg font-medium text-gray-800">
+                        {food.name}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        ${food.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleFoodSelect(food)}
+                    disabled={loading}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 transition"
+                  >
+                    Add
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Ingredients:{" "}
+                  {Array.isArray(food.ingredients)
+                    ? food.ingredients.join(", ")
+                    : typeof food.ingredients === "string"
+                    ? food.ingredients
+                    : "Not specified"}
                 </p>
-                <button
-                  onClick={() => handleFoodSelect(food)}
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 transition"
-                >
-                  Add
-                </button>
               </div>
             ))}
           </div>
@@ -129,12 +173,48 @@ export default function Order() {
           <p className="text-gray-500">No items in your order yet.</p>
         ) : (
           selectedFoods.map((item, index) => (
-            <p key={index} className="text-lg text-gray-800 mb-2">
-              {item.food.name} - ${item.food.price} x {item.quantity} ={" "}
-              <span className="font-medium">
-                ${(item.food.price * item.quantity).toFixed(2)}
-              </span>
-            </p>
+            <div key={index} className="flex items-center mb-4">
+              <img
+                src={item.food.imageUrl}
+                alt={item.food.name}
+                className="w-12 h-12 object-cover rounded mr-4"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/placeholder.jpg";
+                }}
+              />
+              <div className="flex-1">
+                <p className="text-lg text-gray-800">
+                  {item.food.name} - ${item.food.price.toFixed(2)} x{" "}
+                  {item.quantity} ={" "}
+                  <span className="font-medium">
+                    ${(item.food.price * item.quantity).toFixed(2)}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-500">
+                  {Array.isArray(item.food.ingredients)
+                    ? item.food.ingredients.join(", ")
+                    : typeof item.food.ingredients === "string"
+                    ? item.food.ingredients
+                    : "Not specified"}
+                </p>
+              </div>
+              <div className="flex space-x-2 ml-4">
+                <button
+                  onClick={() => handleDecreaseQuantity(item.food._id)}
+                  disabled={loading}
+                  className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:bg-gray-400 transition"
+                >
+                  -
+                </button>
+                <button
+                  onClick={() => handleDeleteFood(item.food._id)}
+                  disabled={loading}
+                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400 transition"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           ))
         )}
         <p className="text-xl font-bold mt-4 text-gray-800">
