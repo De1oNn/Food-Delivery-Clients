@@ -48,7 +48,7 @@ export default function Order() {
     } else {
       newSelectedFoods = [...selectedFoods, { food, quantity }];
     }
-    setSelectedFoods(newSelectedFoods.filter(item => item.quantity > 0)); // Remove items with quantity 0
+    setSelectedFoods(newSelectedFoods.filter((item) => item.quantity > 0));
     setTotalPrice(
       newSelectedFoods.reduce(
         (sum, item) => sum + item.food.price * item.quantity,
@@ -81,7 +81,7 @@ export default function Order() {
     setLoading(true);
     try {
       const orderData = {
-        user: "USER_ID_HERE",
+        user: "507f1f77bcf86cd799439011", // Replace with your valid user ID
         totalPrice: totalPrice,
         foodOrderItems: selectedFoods.map((item) => ({
           food: item.food._id,
@@ -97,8 +97,8 @@ export default function Order() {
       setSelectedFoods([]);
       setTotalPrice(0);
     } catch (error) {
-      console.error("Error creating order:", error);
-      alert("Failed to create order");
+      // console.error("Error creating order:", error.response?.data || error.message);
+      // alert("Failed to create order: " + (error.response?.data?.message || "Unknown error"));
     }
     setLoading(false);
   };
