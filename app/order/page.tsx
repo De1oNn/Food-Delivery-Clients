@@ -6,7 +6,7 @@ interface Food {
   _id: string;
   name: string;
   price: number;
-  imageUrl: string;
+  image: string;
   ingredients: string | string[] | undefined;
 }
 
@@ -20,6 +20,7 @@ export default function Order() {
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     getFoods();
@@ -27,10 +28,16 @@ export default function Order() {
 
   const getFoods = async () => {
     try {
-      const res = await axios.get<{ foods: Food[] }>("http://localhost:5000/food");
-      setFoods(res.data.foods);
+      setLoading(true);
+      const res = await axios.get<{ foods: Food[] }>(
+        "http://localhost:5000/food"
+      );
+      setFoods(res.data.foods || []);
     } catch (error) {
       console.error("Error fetching foods:", error);
+      setError("Failed to load foods. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,9 +86,22 @@ export default function Order() {
 
   const createOrder = async () => {
     setLoading(true);
+    setError("");
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Please login first");
+      }
+
+      const userData = JSON.parse(localStorage.getItem("user") || "{}");
+      const userId = userData._id;
+
+      if (!userId) {
+        throw new Error("User information not found");
+      }
+
       const orderData = {
-        user: "507f1f77bcf86cd799439011", // Replace with your valid user ID
+        user: userId,
         totalPrice: totalPrice,
         foodOrderItems: selectedFoods.map((item) => ({
           food: item.food._id,
@@ -89,18 +109,30 @@ export default function Order() {
         })),
         status: "PENDING",
       };
+
       const res = await axios.post<{ message: string }>(
         "http://localhost:5000/order",
-        orderData
+        orderData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       alert(res.data.message);
       setSelectedFoods([]);
       setTotalPrice(0);
     } catch (error) {
-      // console.error("Error creating order:", error.response?.data || error.message);
-      // alert("Failed to create order: " + (error.response?.data?.message || "Unknown error"));
+      console.error("Error creating order:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to create order. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -114,8 +146,10 @@ export default function Order() {
         <h2 className="text-2xl font-semibold mb-4 text-gray-700">
           Available Foods
         </h2>
-        {foods.length === 0 ? (
+        {loading && foods.length === 0 ? (
           <p className="text-gray-500">Loading foods...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {foods.map((food) => (
@@ -126,19 +160,19 @@ export default function Order() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center">
                     <img
-                      src={food.imageUrl}
+                      src={food.image}
                       alt={food.name}
                       className="w-16 h-16 object-cover rounded mr-4"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder.jpg";
+                        (e.target as HTMLImageElement)
                       }}
                     />
                     <div>
                       <p className="text-lg font-medium text-gray-800">
-                        {food.name}
+                        {food.name || "Unnamed Food"}
                       </p>
                       <p className="text-sm text-gray-600">
-                        ${food.price.toFixed(2)}
+                        ${food.price?.toFixed(2) || "0.00"}
                       </p>
                     </div>
                   </div>
@@ -175,11 +209,11 @@ export default function Order() {
           selectedFoods.map((item, index) => (
             <div key={index} className="flex items-center mb-4">
               <img
-                src={item.food.imageUrl}
+                src={item.food.image}
                 alt={item.food.name}
                 className="w-12 h-12 object-cover rounded mr-4"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = "/placeholder.jpg";
+                  (e.target as HTMLImageElement)
                 }}
               />
               <div className="flex-1">
@@ -221,6 +255,7 @@ export default function Order() {
           Total:{" "}
           <span className="text-green-600">${totalPrice.toFixed(2)}</span>
         </p>
+        {error && <p className="text-red-500 mt-2">{error}</p>}
         <button
           onClick={createOrder}
           disabled={loading || selectedFoods.length === 0}

@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell } from 'lucide-react';
-import { ShoppingCart } from 'lucide-react';
+import { Bell, ShoppingCart } from "lucide-react";
 
 interface User {
   _id: string;
@@ -20,35 +19,42 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", phoneNumber: "" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+  });
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
 
-    if (!token) {
-      setError("No token found. Please log in again.");
-      setIsLoading(false);
-      router.push("/login");
-      return;
-    }
-
-    if (storedUser) {
-      try {
-        const parsedUser: User = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setFormData({ 
-          name: parsedUser.name, 
-          email: parsedUser.email, 
-          phoneNumber: parsedUser.phoneNumber 
-        });
-      } catch (err) {
-        setError("Invalid user data. Please log in again.");
+      if (!token) {
+        setError("Please log in to continue");
         router.push("/login");
+        return;
       }
-    }
-    setIsLoading(false);
+
+      if (storedUser) {
+        try {
+          const parsedUser: User = JSON.parse(storedUser);
+          setUser(parsedUser);
+          setFormData({
+            name: parsedUser.name || "",
+            email: parsedUser.email || "",
+            phoneNumber: parsedUser.phoneNumber || "",
+          });
+        } catch (err) {
+          setError("Invalid user data. Please log in again.");
+          router.push("/login");
+        }
+      }
+      setIsLoading(false);
+    };
+
+    fetchUserData();
   }, [router]);
 
   const handleEditToggle = () => {
@@ -60,7 +66,8 @@ export default function Dashboard() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError("");
     setIsUpdating(true);
 
@@ -76,13 +83,9 @@ export default function Dashboard() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          email: formData.email,
-          name: formData.name,
-          phoneNumber: formData.phoneNumber
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -97,133 +100,132 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error("Update error:", error);
-      setError("Network error occurred. Please try again later.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setIsUpdating(false);
     }
   };
-  const profile =() => {
-    router.push("./dashboard/profile")
-  }
-  const order = () => {
-    router.push("/order")
+
+  const navigateToProfile = () => router.push("/dashboard/profile");
+  const navigateToOrder = () => router.push("/order");
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
-  // Rest of your JSX remains largely the same, with minor improvements:
   return (
-    <div className="min-h-screen bg-gray-900 text-white grid grid-cols-[100px_1fr] grid-rows-[100px_1fr] gap-4 p-4">
-      <div className="h-screen w-[100px] bg-red-500 row-span-2"></div>
-      <div className="w-full bg-yellow-500 flex justify-end items-center pr-4">
-        <div className="flex justify-between w-[200px]">
-          <div>
-            <Bell  className="hover:text-[#EA6A12]"/>
-            <ShoppingCart />
-          </div>
-          <Avatar onClick={profile}>
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-          <div>
-            {user ? <div>{user.name}</div> : <p>No user</p>}
+    <div className="min-h-screen bg-gray-900 text-white grid grid-cols-[100px_1fr] gap-4 p-4">
+      <div className="h-screen w-[100px] bg-red-500 row-span-2" />
+
+      <header className="bg-yellow-500 flex justify-end items-center pr-4">
+        <div className="flex items-center gap-4">
+          <Bell className="hover:text-[#EA6A12] cursor-pointer" />
+          <ShoppingCart className="cursor-pointer" />
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={navigateToProfile}
+          >
+            <Avatar>
+              <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
+            <span>{user?.name || "User"}</span>
           </div>
         </div>
-      </div>
-      
-      <div className="flex flex-col items-center justify-center">
+      </header>
+
+      <main className="flex flex-col items-center justify-center">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold">
             Food<u className="text-green-500">Board</u>
           </h1>
-          <button onClick={order}>
-            order
+          <button
+            onClick={navigateToOrder}
+            className="mt-2 px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+          >
+            Order Now
           </button>
-          <div className="h-[1px] w-20 bg-white mx-auto mt-2"></div>
         </div>
-        <div className="text-center p-6 bg-gray-800 rounded-lg shadow-lg w-full max-w-md">
-          <h1 className="text-3xl font-bold mb-4">Hello! Login Successful!</h1>
-          {isLoading ? (
-            <p className="text-lg">Loading user data...</p>
-          ) : user ? (
-            <div>
-              {editing ? (
-                <div className="flex flex-col gap-3">
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className={`p-2 bg-gray-700 text-white rounded ${
-                      error && !formData.name ? "border-red-500 border" : ""
-                    }`}
-                    placeholder="Enter your name"
-                    disabled={isUpdating}
-                  />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={`p-2 bg-gray-700 text-white rounded ${
-                      error && !formData.email ? "border-red-500 border" : ""
-                    }`}
-                    placeholder="Enter your email"
-                    disabled={isUpdating}
-                  />
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleChange}
-                    className={`p-2 bg-gray-700 text-white rounded ${
-                      error && !formData.phoneNumber
-                        ? "border-red-500 border"
-                        : ""
-                    }`}
-                    placeholder="Enter your phone number"
-                    disabled={isUpdating}
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleUpdate}
-                      className="flex-1 p-2 bg-blue-500 rounded hover:bg-blue-600 transition-all disabled:bg-blue-300"
-                      disabled={isUpdating}
-                    >
-                      {isUpdating ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                      onClick={handleEditToggle}
-                      className="flex-1 p-2 bg-gray-500 rounded hover:bg-gray-600 transition-all disabled:bg-gray-300"
-                      disabled={isUpdating}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-lg">Welcome, {user.name}!</p>
-                  <p className="text-sm text-gray-400">Email: {user.email}</p>
-                  <p className="text-sm text-gray-400">User ID: {user._id}</p>
-                  <p className="text-sm text-gray-400">
-                    Phone: {user.phoneNumber}
-                  </p>
-                  {user.createdAt && (
-                    <p className="text-sm text-gray-400">
-                      Joined: {new Date(user.createdAt).toLocaleDateString()}
-                    </p>
-                  )}
+
+        <section className="p-6 bg-gray-800 rounded-lg shadow-lg w-full max-w-md">
+          <h2 className="text-3xl font-bold mb-4">Welcome Back!</h2>
+
+          {user ? (
+            editing ? (
+              <form onSubmit={handleUpdate} className="space-y-4">
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full p-2 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your name"
+                  disabled={isUpdating}
+                />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full p-2 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your email"
+                  disabled={isUpdating}
+                />
+                <input
+                  type="tel"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  className="w-full p-2 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your phone number"
+                  disabled={isUpdating}
+                />
+                <div className="flex gap-2">
                   <button
-                    onClick={handleEditToggle}
-                    className="mt-4 p-2 bg-green-500 rounded hover:bg-green-600 transition-all"
+                    type="submit"
+                    className="flex-1 p-2 bg-blue-500 rounded hover:bg-blue-600 disabled:bg-blue-300"
+                    disabled={isUpdating}
                   >
-                    Edit Profile
+                    {isUpdating ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleEditToggle}
+                    className="flex-1 p-2 bg-gray-500 rounded hover:bg-gray-600 disabled:bg-gray-300"
+                    disabled={isUpdating}
+                  >
+                    Cancel
                   </button>
                 </div>
-              )}
-            </div>
+              </form>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-lg">Welcome, {user.name}!</p>
+                <p className="text-sm text-gray-400">Email: {user.email}</p>
+                <p className="text-sm text-gray-400">
+                  Phone: {user.phoneNumber}
+                </p>
+                {user.createdAt && (
+                  <p className="text-sm text-gray-400">
+                    Joined: {new Date(user.createdAt).toLocaleDateString()}
+                  </p>
+                )}
+                <button
+                  onClick={handleEditToggle}
+                  className="mt-4 px-4 py-2 bg-green-500 rounded hover:bg-green-600"
+                >
+                  Edit Profile
+                </button>
+              </div>
+            )
           ) : (
-            <p className="text-lg">No user data available.</p>
+            <p className="text-lg">No user data available</p>
           )}
+
           {error && (
             <p
               className={`mt-4 ${
@@ -235,8 +237,8 @@ export default function Dashboard() {
               {error}
             </p>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
