@@ -15,230 +15,93 @@ interface User {
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phoneNumber: "",
-  });
   const router = useRouter();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const token = localStorage.getItem("token");
       const storedUser = localStorage.getItem("user");
-
-      if (!token) {
-        setError("Please log in to continue");
-        router.push("/login");
-        return;
-      }
-
       if (storedUser) {
         try {
           const parsedUser: User = JSON.parse(storedUser);
           setUser(parsedUser);
-          setFormData({
-            name: parsedUser.name || "",
-            email: parsedUser.email || "",
-            phoneNumber: parsedUser.phoneNumber || "",
-          });
         } catch (err) {
-          setError("Invalid user data. Please log in again.");
           router.push("/login");
         }
       }
-      setIsLoading(false);
     };
 
     fetchUserData();
   }, [router]);
 
-  const handleEditToggle = () => {
-    setEditing(!editing);
-    setError("");
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsUpdating(true);
-
-    if (!formData.name || !formData.email || !formData.phoneNumber) {
-      setError("All fields are required");
-      setIsUpdating(false);
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/auth/update-user", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setUser(data.updatedUser);
-        localStorage.setItem("user", JSON.stringify(data.updatedUser));
-        setEditing(false);
-        setError("Profile updated successfully");
-      } else {
-        setError(data.message || "Failed to update profile");
-      }
-    } catch (error) {
-      console.error("Update error:", error);
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
   const navigateToProfile = () => router.push("/dashboard/profile");
   const navigateToOrder = () => router.push("/order");
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white grid grid-cols-[100px_1fr] gap-4 p-4">
-      <div className="h-screen w-[100px] bg-red-500 row-span-2" />
-
-      <header className="bg-yellow-500 flex justify-end items-center pr-4">
-        <div className="flex items-center gap-4">
-          <Bell className="hover:text-[#EA6A12] cursor-pointer" />
-          <ShoppingCart className="cursor-pointer" />
-          <div
-            className="flex items-center gap-2 cursor-pointer"
-            onClick={navigateToProfile}
-          >
-            <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <span>{user?.name || "User"}</span>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      {/* Sidebar */}
+      <aside className="fixed top-0 left-0 h-full w-[100px] bg-orange-600 shadow-lg flex flex-col items-center py-6 space-y-8 z-10">
+        <div
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={navigateToProfile}
+        >
+          <Avatar className="h-12 w-12 ring-2 ring-orange-500 ring-offset-2 ring-offset-gray-800">
+            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          {/* <span className="text-lg font-medium group-hover:text-orange-400 transition-colors">
+            {user?.name || "User"}
+          </span> */}
         </div>
-      </header>
+        <Bell className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors" />
+        <ShoppingCart className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors" />
+      </aside>
 
-      <main className="flex flex-col items-center justify-center">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">
-            Food<u className="text-green-500">Board</u>
-          </h1>
-          <button
-            onClick={navigateToOrder}
-            className="mt-2 px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
-          >
-            Order Now
-          </button>
-        </div>
-
-        <section className="p-6 bg-gray-800 rounded-lg shadow-lg w-full max-w-md">
-          <h2 className="text-3xl font-bold mb-4">Welcome Back!</h2>
-
-          {user ? (
-            editing ? (
-              <form onSubmit={handleUpdate} className="space-y-4">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full p-2 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your name"
-                  disabled={isUpdating}
-                />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full p-2 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your email"
-                  disabled={isUpdating}
-                />
-                <input
-                  type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  className="w-full p-2 bg-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your phone number"
-                  disabled={isUpdating}
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="flex-1 p-2 bg-blue-500 rounded hover:bg-blue-600 disabled:bg-blue-300"
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? "Saving..." : "Save"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleEditToggle}
-                    className="flex-1 p-2 bg-gray-500 rounded hover:bg-gray-600 disabled:bg-gray-300"
-                    disabled={isUpdating}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-lg">Welcome, {user.name}!</p>
-                <p className="text-sm text-gray-400">Email: {user.email}</p>
-                <p className="text-sm text-gray-400">
-                  Phone: {user.phoneNumber}
-                </p>
-                {user.createdAt && (
-                  <p className="text-sm text-gray-400">
-                    Joined: {new Date(user.createdAt).toLocaleDateString()}
-                  </p>
-                )}
-                <button
-                  onClick={handleEditToggle}
-                  className="mt-4 px-4 py-2 bg-green-500 rounded hover:bg-green-600"
-                >
-                  Edit Profile
-                </button>
-              </div>
-            )
-          ) : (
-            <p className="text-lg">No user data available</p>
-          )}
-
-          {error && (
-            <p
-              className={`mt-4 ${
-                error.includes("successfully")
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
+      {/* Main Content */}
+      <div className="ml-[100px] p-6">
+        {/* Header */}
+        <header className="bg-gray-800/50 backdrop-blur-lg rounded-xl shadow-lg p-4 flex justify-center items-center mb-6">
+          <div className="relative flex items-center w-full max-w-md">
+            <input
+              placeholder="Search for food..."
+              type="search" // Changed from "Search food" to proper type="search"
+              className="w-full h-12 px-5 pr-10 bg-gray-700/70 text-white placeholder-gray-400 rounded-full border-2 border-gray-600 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all duration-300"
+            />
+            <svg
+              className="absolute right-3 w-5 h-5 text-gray-400 hover:text-orange-500 transition-colors duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              {error}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </header>
+
+        {/* Main Section */}
+        <main className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)]">
+          <div className="text-center space-y-8">
+            <h1 className="text-5xl font-extrabold tracking-tight">
+              Food<span className="text-orange-500">Board</span>
+            </h1>
+            <p className="text-gray-300 text-lg max-w-md mx-auto">
+              Order delicious meals from your favorite local restaurants,
+              delivered straight to your door.
             </p>
-          )}
-        </section>
-      </main>
+            <button
+              onClick={navigateToOrder}
+              className="px-8 py-4 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-orange-500/30"
+            >
+              Order Now
+            </button>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 interface Food {
   _id: string;
@@ -16,6 +17,7 @@ interface SelectedFood {
 }
 
 export default function Order() {
+  const router = useRouter();
   const [foods, setFoods] = useState<Food[]>([]);
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
@@ -134,9 +136,15 @@ export default function Order() {
       setLoading(false);
     }
   };
+  const back = () => {
+    router.push("/dashboard")
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-gray-100 min-h-screen">
+      <button onClick={back}>
+        back
+      </button>
       <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
         Create Order
       </h1>
