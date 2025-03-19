@@ -1,14 +1,20 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
 interface Food {
   _id: string;
-  name: string;
+  foodName: string;
   price: number;
   image: string;
   ingredients: string | string[] | undefined;
+  category: string; // Explicitly defined as a string matching categoryName
+}
+
+interface Category {
+  categoryName: string;
 }
 
 interface SelectedFood {
@@ -23,10 +29,27 @@ export default function Order() {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     getFoods();
+    getCategories();
   }, []);
+
+  const getCategories = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get<{ category: Category[] }>(
+        "http://localhost:5000/food-category"
+      );
+      setCategories(res.data.category || []);
+    } catch (error) {
+      setError("Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getFoods = async () => {
     try {
@@ -91,16 +114,12 @@ export default function Order() {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Please login first");
-      }
+      if (!token) throw new Error("Please login first");
 
       const userData = JSON.parse(localStorage.getItem("user") || "{}");
       const userId = userData._id;
 
-      if (!userId) {
-        throw new Error("User information not found");
-      }
+      if (!userId) throw new Error("User information not found");
 
       const orderData = {
         user: userId,
@@ -116,9 +135,7 @@ export default function Order() {
         "http://localhost:5000/order",
         orderData,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -136,141 +153,197 @@ export default function Order() {
       setLoading(false);
     }
   };
+
   const back = () => {
-    router.push("/dashboard")
-  }
+    router.push("/dashboard");
+  };
+
+  // Filter foods based on selected category
+  const filteredFoods = selectedCategory
+    ? foods.filter((food) => food.category === selectedCategory)
+    : foods;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-gray-100 min-h-screen">
-      <button onClick={back}>
-        back
-      </button>
-      <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
-        Create Order
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={back}
+          className="mb-6 h-10 w-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-all duration-300 shadow-md"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
 
-      {/* Available Foods */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">
-          Available Foods
-        </h2>
-        {loading && foods.length === 0 ? (
-          <p className="text-gray-500">Loading foods...</p>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {foods.map((food) => (
-              <div
-                key={food._id}
-                className="flex flex-col p-4 bg-white rounded-lg shadow-md"
+        <h1 className="text-4xl font-extrabold text-white text-center mb-8">
+          Create Your Order
+        </h1>
+
+        {/* Available Foods */}
+        <div className="mb-10">
+          <h2 className="text-2xl font-semibold text-orange-400 mb-6">
+            Available Foods
+          </h2>
+          {/* Categories Filter */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 rounded-full text-white font-medium transition-all duration-300 shadow-md ${
+                !selectedCategory
+                  ? "bg-orange-500 hover:bg-orange-600"
+                  : "bg-gray-700/50 hover:bg-gray-600"
+              }`}
+            >
+              All
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category.categoryName}
+                onClick={() => setSelectedCategory(category.categoryName)}
+                className={`px-4 py-2 rounded-full text-white font-medium transition-all duration-300 shadow-md ${
+                  selectedCategory === category.categoryName
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-gray-700/50 hover:bg-gray-600"
+                }`}
               >
-                <div className="flex items-center justify-between mb-2">
+                {category.categoryName}
+              </button>
+            ))}
+          </div>
+
+          {loading && foods.length === 0 ? (
+            <p className="text-gray-400 text-center animate-pulse">
+              Loading foods...
+            </p>
+          ) : error ? (
+            <p className="text-red-400 text-center">{error}</p>
+          ) : filteredFoods.length === 0 ? (
+            <p className="text-gray-400 text-center">
+              No foods available in this category.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {filteredFoods.map((food) => (
+                <div
+                  key={food._id}
+                  className="bg-gray-800/50 backdrop-blur-md p-4 rounded-xl shadow-lg flex items-center justify-between hover:shadow-orange-500/20 transition-all duration-300"
+                >
                   <div className="flex items-center">
                     <img
                       src={food.image}
-                      alt={food.name}
-                      className="w-16 h-16 object-cover rounded mr-4"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement)
-                      }}
+                      alt={food.foodName}
+                      className="w-16 h-16 object-cover rounded-lg mr-4"
+                      onError={(e) =>
+                        (e.currentTarget.src = "/fallback-image.jpg")
+                      }
                     />
                     <div>
-                      <p className="text-lg font-medium text-gray-800">
-                        {food.name || "Unnamed Food"}
+                      <p className="text-lg font-medium text-white">
+                        {food.foodName || "Unnamed Food"}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-300">
                         ${food.price?.toFixed(2) || "0.00"}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {Array.isArray(food.ingredients)
+                          ? food.ingredients.join(", ")
+                          : typeof food.ingredients === "string"
+                          ? food.ingredients
+                          : "Not specified"}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => handleFoodSelect(food)}
                     disabled={loading}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 transition"
+                    className="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 disabled:bg-gray-500 transition-all duration-300 shadow-md"
                   >
                     Add
                   </button>
                 </div>
-                <p className="text-sm text-gray-500">
-                  Ingredients:{" "}
-                  {Array.isArray(food.ingredients)
-                    ? food.ingredients.join(", ")
-                    : typeof food.ingredients === "string"
-                    ? food.ingredients
-                    : "Not specified"}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Your Order */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">
-          Your Order
-        </h2>
-        {selectedFoods.length === 0 ? (
-          <p className="text-gray-500">No items in your order yet.</p>
-        ) : (
-          selectedFoods.map((item, index) => (
-            <div key={index} className="flex items-center mb-4">
-              <img
-                src={item.food.image}
-                alt={item.food.name}
-                className="w-12 h-12 object-cover rounded mr-4"
-                onError={(e) => {
-                  (e.target as HTMLImageElement)
-                }}
-              />
-              <div className="flex-1">
-                <p className="text-lg text-gray-800">
-                  {item.food.name} - ${item.food.price.toFixed(2)} x{" "}
-                  {item.quantity} ={" "}
-                  <span className="font-medium">
-                    ${(item.food.price * item.quantity).toFixed(2)}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-500">
-                  {Array.isArray(item.food.ingredients)
-                    ? item.food.ingredients.join(", ")
-                    : typeof item.food.ingredients === "string"
-                    ? item.food.ingredients
-                    : "Not specified"}
-                </p>
-              </div>
-              <div className="flex space-x-2 ml-4">
-                <button
-                  onClick={() => handleDecreaseQuantity(item.food._id)}
-                  disabled={loading}
-                  className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:bg-gray-400 transition"
-                >
-                  -
-                </button>
-                <button
-                  onClick={() => handleDeleteFood(item.food._id)}
-                  disabled={loading}
-                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400 transition"
-                >
-                  Delete
-                </button>
-              </div>
+              ))}
             </div>
-          ))
-        )}
-        <p className="text-xl font-bold mt-4 text-gray-800">
-          Total:{" "}
-          <span className="text-green-600">${totalPrice.toFixed(2)}</span>
-        </p>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
-        <button
-          onClick={createOrder}
-          disabled={loading || selectedFoods.length === 0}
-          className="mt-4 w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-400 transition"
-        >
-          {loading ? "Processing..." : "Place Order"}
-        </button>
+          )}
+        </div>
+
+        {/* Your Order */}
+        <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-semibold text-orange-400 mb-6">
+            Your Order
+          </h2>
+          {selectedFoods.length === 0 ? (
+            <p className="text-gray-400">No items in your order yet.</p>
+          ) : (
+            selectedFoods.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center mb-4 border-b border-gray-700/50 pb-4 last:border-b-0"
+              >
+                <img
+                  src={item.food.image}
+                  alt={item.food.foodName}
+                  className="w-12 h-12 object-cover rounded-lg mr-4"
+                  onError={(e) => (e.currentTarget.src = "/fallback-image.jpg")}
+                />
+                <div className="flex-1">
+                  <p className="text-lg text-white">
+                    {item.food.foodName} - ${item.food.price.toFixed(2)} x{" "}
+                    {item.quantity} ={" "}
+                    <span className="font-medium text-orange-400">
+                      ${(item.food.price * item.quantity).toFixed(2)}
+                    </span>
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {Array.isArray(item.food.ingredients)
+                      ? item.food.ingredients.join(", ")
+                      : typeof item.food.ingredients === "string"
+                      ? item.food.ingredients
+                      : "Not specified"}
+                  </p>
+                </div>
+                <div className="flex space-x-2 ml-4">
+                  <button
+                    onClick={() => handleDecreaseQuantity(item.food._id)}
+                    disabled={loading}
+                    className="px-3 py-1 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 disabled:bg-gray-500 transition-all duration-300 shadow-md"
+                  >
+                    -
+                  </button>
+                  <button
+                    onClick={() => handleDeleteFood(item.food._id)}
+                    disabled={loading}
+                    className="px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 disabled:bg-gray-500 transition-all duration-300 shadow-md"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+          <p className="text-xl font-bold text-white mt-6">
+            Total:{" "}
+            <span className="text-orange-400">${totalPrice.toFixed(2)}</span>
+          </p>
+          {error && <p className="text-red-400 mt-2">{error}</p>}
+          <button
+            onClick={createOrder}
+            disabled={loading || selectedFoods.length === 0}
+            className="mt-6 w-full px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 disabled:bg-gray-500 transition-all duration-300 shadow-lg hover:shadow-orange-500/30"
+          >
+            {loading ? "Processing..." : "Place Order"}
+          </button>
+        </div>
       </div>
     </div>
   );
