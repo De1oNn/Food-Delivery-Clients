@@ -41,9 +41,9 @@ export default function Profile() {
         const parsedUser: User = JSON.parse(storedUser);
         setUser(parsedUser);
         setFormData({
-          name: parsedUser.name,
-          email: parsedUser.email,
-          phoneNumber: parsedUser.phoneNumber,
+          name: parsedUser.name || "",
+          email: parsedUser.email || "",
+          phoneNumber: parsedUser.phoneNumber || "",
         });
       } catch (err) {
         setError("Invalid user data. Please log in again.");
@@ -82,7 +82,20 @@ export default function Profile() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/auth/update-user", {
+      if (!token) {
+        throw new Error("No token found. Please log in again.");
+      }
+
+      console.log("Sending update request with:", {
+        token,
+        body: {
+          email: formData.email,
+          name: formData.name,
+          phoneNumber: formData.phoneNumber,
+        },
+      });
+
+      const response = await fetch("http://localhost:5000/auth/update-user", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -96,18 +109,33 @@ export default function Profile() {
       });
 
       const data = await response.json();
+      console.log("Response from server:", { status: response.status, data });
 
-      if (response.ok) {
-        setUser(data.updatedUser);
-        localStorage.setItem("user", JSON.stringify(data.updatedUser));
-        setEditing(false);
-        setError("Profile updated successfully");
-      } else {
-        setError(data.message || "Failed to update profile");
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! Status: ${response.status}`
+        );
       }
+
+      const updatedUser: User = {
+        _id: data.updatedUser._id,
+        email: data.updatedUser.email,
+        name: data.updatedUser.name,
+        phoneNumber: data.updatedUser.phoneNumber,
+        createdAt: data.updatedUser.createdAt,
+        profilePicture: data.updatedUser.profilePicture,
+      };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setEditing(false);
+      setError("Profile updated successfully");
     } catch (error) {
-      console.error("Update error:", error);
-      setError("Network error occurred. Please try again later.");
+      console.error("Update error details:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Network error occurred. Please try again later."
+      );
     } finally {
       setIsUpdating(false);
     }
@@ -124,13 +152,16 @@ export default function Profile() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("/auth/delete-profile-picture", {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        "http://localhost:5000/auth/delete-profile-picture",
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -162,13 +193,16 @@ export default function Profile() {
       const formData = new FormData();
       formData.append("profilePicture", file);
 
-      const response = await fetch("/auth/update-profile-picture", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:5000/auth/update-profile-picture",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       const data = await response.json();
       if (response.ok) {
@@ -352,7 +386,7 @@ export default function Profile() {
                 <div className="bg-gray-700/50 p-4 rounded-lg space-y-3">
                   <p className="text-sm text-gray-300">
                     <span className="font-medium text-orange-400">Name:</span>{" "}
-                    {user.name}
+                    {user.name || "Not set"}
                   </p>
                   <p className="text-sm text-gray-300">
                     <span className="font-medium text-orange-400">Email:</span>{" "}
@@ -360,7 +394,7 @@ export default function Profile() {
                   </p>
                   <p className="text-sm text-gray-300">
                     <span className="font-medium text-orange-400">Phone:</span>{" "}
-                    {user.phoneNumber}
+                    {user.phoneNumber || "Not set"}
                   </p>
                   <p className="text-sm text-gray-300">
                     <span className="font-medium text-orange-400">

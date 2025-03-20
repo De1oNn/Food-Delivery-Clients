@@ -10,11 +10,14 @@ interface Food {
   price: number;
   image: string;
   ingredients: string | string[] | undefined;
-  category: string; // Explicitly defined as a string matching categoryName
+  category: string; // ObjectId as string
 }
 
 interface Category {
+  _id: string; 
   categoryName: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface SelectedFood {
@@ -30,7 +33,7 @@ export default function Order() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null); // Now represents category _id
 
   useEffect(() => {
     getFoods();
@@ -40,12 +43,15 @@ export default function Order() {
   const getCategories = async () => {
     try {
       setLoading(true);
-      const res = await axios.get<{ category: Category[] }>(
+      const res = await axios.get<{ message: string; categories: Category[] }>(
         "http://localhost:5000/food-category"
       );
-      setCategories(res.data.category || []);
+      const fetchedCategories = res.data.categories || [];
+      console.log("Fetched categories:", fetchedCategories);
+      setCategories(fetchedCategories);
     } catch (error) {
-      setError("Failed to load categories");
+      console.error("Error fetching categories:", error);
+      setError("Failed to load categories.");
     } finally {
       setLoading(false);
     }
@@ -57,10 +63,11 @@ export default function Order() {
       const res = await axios.get<{ foods: Food[] }>(
         "http://localhost:5000/food"
       );
+      console.log("Fetched foods:", res.data.foods);
       setFoods(res.data.foods || []);
     } catch (error) {
       console.error("Error fetching foods:", error);
-      setError("Failed to load foods. Please try again later.");
+      setError("Failed to load foods.");
     } finally {
       setLoading(false);
     }
@@ -134,9 +141,7 @@ export default function Order() {
       const res = await axios.post<{ message: string }>(
         "http://localhost:5000/order",
         orderData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       alert(res.data.message);
@@ -158,15 +163,20 @@ export default function Order() {
     router.push("/dashboard");
   };
 
-  // Filter foods based on selected category
+  // Filter foods by matching food.category (ObjectId) directly with selectedCategory (ObjectId)
   const filteredFoods = selectedCategory
-    ? foods.filter((food) => food.category === selectedCategory)
+    ? foods.filter((food) => {
+        const matches = food.category === selectedCategory;
+        console.log(
+          `Comparing: "${food.category}" (food) vs "${selectedCategory}" (selected) -> ${matches}`
+        );
+        return matches;
+      })
     : foods;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
         <button
           onClick={back}
           className="mb-6 h-10 w-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-all duration-300 shadow-md"
@@ -190,12 +200,10 @@ export default function Order() {
           Create Your Order
         </h1>
 
-        {/* Available Foods */}
         <div className="mb-10">
           <h2 className="text-2xl font-semibold text-orange-400 mb-6">
             Available Foods
           </h2>
-          {/* Categories Filter */}
           <div className="flex flex-wrap gap-3 mb-6">
             <button
               onClick={() => setSelectedCategory(null)}
@@ -209,15 +217,15 @@ export default function Order() {
             </button>
             {categories.map((category) => (
               <button
-                key={category.categoryName}
-                onClick={() => setSelectedCategory(category.categoryName)}
+                key={category._id}
+                onClick={() => setSelectedCategory(category._id)} // Use _id instead of categoryName
                 className={`px-4 py-2 rounded-full text-white font-medium transition-all duration-300 shadow-md ${
-                  selectedCategory === category.categoryName
+                  selectedCategory === category._id
                     ? "bg-orange-500 hover:bg-orange-600"
                     : "bg-gray-700/50 hover:bg-gray-600"
                 }`}
               >
-                {category.categoryName}
+                {category.categoryName} {/* Display name, but filter by _id */}
               </button>
             ))}
           </div>
@@ -256,9 +264,7 @@ export default function Order() {
                         ${food.price?.toFixed(2) || "0.00"}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {Array.isArray(food.ingredients)
-                          ? food.ingredients.join(", ")
-                          : typeof food.ingredients === "string"
+                        {typeof food.ingredients === "string"
                           ? food.ingredients
                           : "Not specified"}
                       </p>
@@ -277,7 +283,6 @@ export default function Order() {
           )}
         </div>
 
-        {/* Your Order */}
         <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg">
           <h2 className="text-2xl font-semibold text-orange-400 mb-6">
             Your Order
@@ -305,9 +310,7 @@ export default function Order() {
                     </span>
                   </p>
                   <p className="text-xs text-gray-400">
-                    {Array.isArray(item.food.ingredients)
-                      ? item.food.ingredients.join(", ")
-                      : typeof item.food.ingredients === "string"
+                    {typeof item.food.ingredients === "string"
                       ? item.food.ingredients
                       : "Not specified"}
                   </p>
