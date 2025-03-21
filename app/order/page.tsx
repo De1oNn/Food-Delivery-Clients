@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { log } from "util";
 
 interface Food {
   _id: string;
@@ -14,7 +15,7 @@ interface Food {
 }
 
 interface Category {
-  _id: string; 
+  _id: string;
   categoryName: string;
   createdAt?: string;
   updatedAt?: string;
@@ -33,7 +34,8 @@ export default function Order() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null); // Now represents category _id
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [filteredFoods, setFilteredFoods] = useState<Food[]>([]);
 
   useEffect(() => {
     getFoods();
@@ -49,6 +51,9 @@ export default function Order() {
       const fetchedCategories = res.data.categories || [];
       console.log("Fetched categories:", fetchedCategories);
       setCategories(fetchedCategories);
+      if (fetchedCategories.length > 0 && !selectedCategory) {
+        setSelectedCategory(fetchedCategories[0]._id); // Optional: Set default category
+      }
     } catch (error) {
       console.error("Error fetching categories:", error);
       setError("Failed to load categories.");
@@ -63,8 +68,10 @@ export default function Order() {
       const res = await axios.get<{ foods: Food[] }>(
         "http://localhost:5000/food"
       );
-      console.log("Fetched foods:", res.data.foods);
-      setFoods(res.data.foods || []);
+      const fetchedFoods = res.data.foods || [];
+      console.log("Fetched foods:", fetchedFoods);
+      setFoods(fetchedFoods);
+      setFilteredFoods(fetchedFoods);
     } catch (error) {
       console.error("Error fetching foods:", error);
       setError("Failed to load foods.");
@@ -87,7 +94,8 @@ export default function Order() {
     } else {
       newSelectedFoods = [...selectedFoods, { food, quantity }];
     }
-    setSelectedFoods(newSelectedFoods.filter((item) => item.quantity > 0));
+    newSelectedFoods = newSelectedFoods.filter((item) => item.quantity > 0);
+    setSelectedFoods(newSelectedFoods);
     setTotalPrice(
       newSelectedFoods.reduce(
         (sum, item) => sum + item.food.price * item.quantity,
@@ -97,10 +105,8 @@ export default function Order() {
   };
 
   const handleDecreaseQuantity = (foodId: string) => {
-    handleFoodSelect(
-      selectedFoods.find((item) => item.food._id === foodId)!.food,
-      -1
-    );
+    const foodItem = selectedFoods.find((item) => item.food._id === foodId);
+    if (foodItem) handleFoodSelect(foodItem.food, -1);
   };
 
   const handleDeleteFood = (foodId: string) => {
@@ -125,12 +131,11 @@ export default function Order() {
 
       const userData = JSON.parse(localStorage.getItem("user") || "{}");
       const userId = userData._id;
-
       if (!userId) throw new Error("User information not found");
 
       const orderData = {
         user: userId,
-        totalPrice: totalPrice,
+        totalPrice,
         foodOrderItems: selectedFoods.map((item) => ({
           food: item.food._id,
           quantity: item.quantity,
@@ -159,20 +164,26 @@ export default function Order() {
     }
   };
 
-  const back = () => {
-    router.push("/dashboard");
-  };
+  const back = () => router.push("/dashboard");
 
-  // Filter foods by matching food.category (ObjectId) directly with selectedCategory (ObjectId)
-  const filteredFoods = selectedCategory
-    ? foods.filter((food) => {
-        const matches = food.category === selectedCategory;
-        console.log(
-          `Comparing: "${food.category}" (food) vs "${selectedCategory}" (selected) -> ${matches}`
-        );
-        return matches;
-      })
-    : foods;
+  useEffect(() => {
+    const filteredFoodsByCategory = selectedCategory
+      ? foods.filter((food) => {
+          const matches = food.category._id === selectedCategory;
+          console.log(food.category._id, selectedCategory);
+
+          // console.log(
+          //   `Food: "${food.foodName}", Category ID: "${food.category}", Selected Category ID: "${selectedCategory}", Matches: ${matches}`
+          // );
+          return matches;
+        })
+      : foods;
+
+    console.log(selectedCategory);
+    console.log(filteredFoodsByCategory);
+
+    setFilteredFoods(filteredFoodsByCategory);
+  }, [selectedCategory]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
@@ -218,14 +229,14 @@ export default function Order() {
             {categories.map((category) => (
               <button
                 key={category._id}
-                onClick={() => setSelectedCategory(category._id)} // Use _id instead of categoryName
+                onClick={() => setSelectedCategory(category._id)}
                 className={`px-4 py-2 rounded-full text-white font-medium transition-all duration-300 shadow-md ${
                   selectedCategory === category._id
                     ? "bg-orange-500 hover:bg-orange-600"
                     : "bg-gray-700/50 hover:bg-gray-600"
                 }`}
               >
-                {category.categoryName} {/* Display name, but filter by _id */}
+                {category.categoryName}
               </button>
             ))}
           </div>
@@ -238,7 +249,9 @@ export default function Order() {
             <p className="text-red-400 text-center">{error}</p>
           ) : filteredFoods.length === 0 ? (
             <p className="text-gray-400 text-center">
-              No foods available in this category.
+              {selectedCategory
+                ? "No foods available in this category."
+                : "No foods available."}
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -290,9 +303,9 @@ export default function Order() {
           {selectedFoods.length === 0 ? (
             <p className="text-gray-400">No items in your order yet.</p>
           ) : (
-            selectedFoods.map((item, index) => (
+            selectedFoods.map((item) => (
               <div
-                key={index}
+                key={item.food._id}
                 className="flex items-center mb-4 border-b border-gray-700/50 pb-4 last:border-b-0"
               >
                 <img
