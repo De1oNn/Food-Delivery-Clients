@@ -14,6 +14,7 @@ interface Food {
   category: string; // ObjectId as string
 }
 
+
 interface Category {
   _id: string;
   categoryName: string;
