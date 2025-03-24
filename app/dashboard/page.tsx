@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, ShoppingCart } from "lucide-react";
 import axios from "axios";
+import { div } from "framer-motion/m";
 
 interface User {
   _id: string;
@@ -20,8 +21,9 @@ interface Food {
   price: number;
   image: string;
   ingredients: string;
-  category: { _id: string; categoryName: string } | string; // Handle populated or ObjectId
+  category: { _id: string; categoryName: string } | string;
 }
+
 interface SelectedFood {
   food: Food;
   quantity: number;
@@ -34,6 +36,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -44,8 +47,11 @@ export default function Dashboard() {
           const parsedUser: User = JSON.parse(storedUser);
           setUser(parsedUser);
         } catch (err) {
+          console.error("Error parsing user data:", err);
           router.push("/login");
         }
+      } else {
+        router.push("/login");
       }
     };
 
@@ -59,7 +65,7 @@ export default function Dashboard() {
       const res = await axios.get<{ foods: Food[] }>(
         "http://localhost:5000/food"
       );
-      console.log("Fetched foods:", res.data.foods); // Debug log
+      console.log("Fetched foods:", res.data.foods);
       setFoods(res.data.foods || []);
     } catch (error) {
       console.error("Error fetching foods:", error);
@@ -67,7 +73,9 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
   const handleFoodSelect = (food: Food, quantity: number = 1) => {
+    console.log("Adding food to cart:", food); // Debug log
     const existingFoodIndex = selectedFoods.findIndex(
       (item) => item.food._id === food._id
     );
@@ -89,6 +97,21 @@ export default function Dashboard() {
         0
       )
     );
+    console.log("Updated selectedFoods:", newSelectedFoods); // Debug log
+  };
+
+  const handleRemoveFromCart = (foodId: string) => {
+    console.log("Removing food from cart:", foodId); // Debug log
+    const newSelectedFoods = selectedFoods.filter(
+      (item) => item.food._id !== foodId
+    );
+    setSelectedFoods(newSelectedFoods);
+    setTotalPrice(
+      newSelectedFoods.reduce(
+        (sum, item) => sum + item.food.price * item.quantity,
+        0
+      )
+    );
   };
 
   const navigateToProfile = () => router.push("/dashboard/profile");
@@ -98,7 +121,6 @@ export default function Dashboard() {
     setSearchQuery(e.target.value);
   };
 
-  // Filter foods based on search query
   const filteredFoods = foods.filter((food) =>
     food.foodName.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -113,11 +135,17 @@ export default function Dashboard() {
         >
           <Avatar className="h-12 w-12 ring-2 ring-orange-500 ring-offset-2 ring-offset-gray-800">
             <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
         </div>
         <Bell className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors" />
-        <ShoppingCart className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors" />
+        <ShoppingCart
+          className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
+          onClick={() => {
+            console.log("Cart clicked, isCartOpen:", !isCartOpen); // Debug log
+            setIsCartOpen(!isCartOpen);
+          }}
+        />
       </aside>
 
       {/* Main Content */}
@@ -202,6 +230,83 @@ export default function Dashboard() {
             </div>
           )}
         </main>
+
+        {/* Cart Modal */}
+        {isCartOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
+            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md">
+              <h2 className="text-2xl font-semibold text-orange-400 mb-6">
+                Your Cart
+              </h2>
+              {selectedFoods.length === 0 ? (
+                <p className="text-gray-400">No items in your cart yet.</p>
+              ) : (
+                selectedFoods.map((item) => (
+                  <div
+                    key={item.food._id}
+                    className="flex items-center mt-2 bg-gray-700/30 p-3 rounded-lg"
+                  >
+                    <img
+                      src={item.food.image || "/fallback-image.jpg"}
+                      alt={item.food.foodName || "Unknown"}
+                      className="w-12 h-12 object-cover rounded-lg mr-4"
+                      onError={(e) =>
+                        (e.currentTarget.src = "/fallback-image.jpg")
+                      }
+                    />
+                    <div className="flex-1">
+                      <p className="text-white">
+                        <strong>{item.food.foodName || "Unknown Food"}</strong>{" "}
+                        - Quantity: {item.quantity}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Ingredients: {item.food.ingredients || "Not specified"}
+                      </p>
+                      <p className="text-sm text-orange-400">
+                        ${(item.food.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveFromCart(item.food._id)}
+                      className="ml-4 px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-300 shadow-md"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))
+              )}
+              {selectedFoods.length > 0 && (
+                <p className="text-xl font-bold text-white mt-6">
+                  Total:{" "}
+                  <span className="text-orange-400">
+                    ${totalPrice.toFixed(2)}
+                  </span>
+                </p>
+              )}
+              <div className="flex justify-between mt-6">
+                <button
+                  onClick={() => setIsCartOpen(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
+                >
+                  Close
+                </button>
+                {selectedFoods.length > 0 && (
+                  <button
+                    onClick={navigateToOrder}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-all duration-300 shadow-md"
+                  >
+                    Proceed to Order
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {isCartOpen && (
+          <div>
+
+          </div>
+        )}
       </div>
     </div>
   );
