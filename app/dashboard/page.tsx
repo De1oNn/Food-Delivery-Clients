@@ -22,12 +22,18 @@ interface Food {
   ingredients: string;
   category: { _id: string; categoryName: string } | string; // Handle populated or ObjectId
 }
+interface SelectedFood {
+  food: Food;
+  quantity: number;
+}
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [foods, setFoods] = useState<Food[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
+  const [totalPrice, setTotalPrice] = useState<number>(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -60,6 +66,29 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+  const handleFoodSelect = (food: Food, quantity: number = 1) => {
+    const existingFoodIndex = selectedFoods.findIndex(
+      (item) => item.food._id === food._id
+    );
+    let newSelectedFoods: SelectedFood[];
+    if (existingFoodIndex >= 0) {
+      newSelectedFoods = selectedFoods.map((item, index) =>
+        index === existingFoodIndex
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
+      );
+    } else {
+      newSelectedFoods = [...selectedFoods, { food, quantity }];
+    }
+    newSelectedFoods = newSelectedFoods.filter((item) => item.quantity > 0);
+    setSelectedFoods(newSelectedFoods);
+    setTotalPrice(
+      newSelectedFoods.reduce(
+        (sum, item) => sum + item.food.price * item.quantity,
+        0
+      )
+    );
   };
 
   const navigateToProfile = () => router.push("/dashboard/profile");
@@ -145,6 +174,13 @@ export default function Dashboard() {
                   <p className="text-xs text-gray-400">
                     {food.ingredients || "No ingredients listed"}
                   </p>
+                  <button
+                    onClick={() => handleFoodSelect(food)}
+                    disabled={loading}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 disabled:bg-gray-500 transition-all duration-300 shadow-md"
+                  >
+                    Add
+                  </button>
                 </div>
               ))}
             </div>

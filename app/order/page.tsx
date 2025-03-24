@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { log } from "util";
 
 interface Food {
   _id: string;
@@ -11,9 +10,8 @@ interface Food {
   price: number;
   image: string;
   ingredients: string | string[] | undefined;
-  category: string; // ObjectId as string
+  category: string;
 }
-
 
 interface Category {
   _id: string;
@@ -27,6 +25,15 @@ interface SelectedFood {
   quantity: number;
 }
 
+interface Order {
+  _id: string;
+  user: string;
+  totalPrice: number;
+  foodOrderItems: { food: string; quantity: number }[];
+  status: string;
+  createdAt?: string;
+}
+
 export default function Order() {
   const router = useRouter();
   const [foods, setFoods] = useState<Food[]>([]);
@@ -37,11 +44,24 @@ export default function Order() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredFoods, setFilteredFoods] = useState<Food[]>([]);
+  const [createdOrders, setCreatedOrders] = useState<Order[]>([]);
 
+  // Load orders from localStorage on mount
   useEffect(() => {
+    const savedOrders = localStorage.getItem("createdOrders");
+    if (savedOrders) {
+      setCreatedOrders(JSON.parse(savedOrders));
+    }
     getFoods();
     getCategories();
   }, []);
+
+  // Save orders to localStorage whenever createdOrders changes
+  useEffect(() => {
+    if (createdOrders.length > 0) {
+      localStorage.setItem("createdOrders", JSON.stringify(createdOrders));
+    }
+  }, [createdOrders]);
 
   const getCategories = async () => {
     try {
@@ -50,10 +70,9 @@ export default function Order() {
         "http://localhost:5000/food-category"
       );
       const fetchedCategories = res.data.categories || [];
-      console.log("Fetched categories:", fetchedCategories);
       setCategories(fetchedCategories);
       if (fetchedCategories.length > 0 && !selectedCategory) {
-        setSelectedCategory(fetchedCategories[0]._id); // Optional: Set default category
+        setSelectedCategory(fetchedCategories[0]._id);
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -70,7 +89,6 @@ export default function Order() {
         "http://localhost:5000/food"
       );
       const fetchedFoods = res.data.foods || [];
-      console.log("Fetched foods:", fetchedFoods);
       setFoods(fetchedFoods);
       setFilteredFoods(fetchedFoods);
     } catch (error) {
@@ -144,15 +162,16 @@ export default function Order() {
         status: "PENDING",
       };
 
-      const res = await axios.post<{ message: string }>(
+      const res = await axios.post<{ message: string; order: Order }>(
         "http://localhost:5000/order",
         orderData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert(res.data.message);
+      setCreatedOrders((prevOrders) => [...prevOrders, res.data.order]);
       setSelectedFoods([]);
       setTotalPrice(0);
+      alert(res.data.message);
     } catch (error) {
       console.error("Error creating order:", error);
       setError(
@@ -172,10 +191,6 @@ export default function Order() {
       ? foods.filter((food) => {
           const matches = food.category._id === selectedCategory;
           console.log(food.category._id, selectedCategory);
-
-          // console.log(
-          //   `Food: "${food.foodName}", Category ID: "${food.category}", Selected Category ID: "${selectedCategory}", Matches: ${matches}`
-          // );
           return matches;
         })
       : foods;
@@ -361,6 +376,70 @@ export default function Order() {
             {loading ? "Processing..." : "Place Order"}
           </button>
         </div>
+
+        {createdOrders.length > 0 && (
+          <div className="mt-10 bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg">
+            <h2 className="text-2xl font-semibold text-orange-400 mb-6">
+              Your Orders
+            </h2>
+            {createdOrders.map((order, index) => (
+              <div
+                key={order._id}
+                className="mb-6 border-b border-gray-700/50 pb-6 last:border-b-0"
+              >
+                <p className="text-white">
+                  <strong>Order #{index + 1} ID:</strong> {order._id}
+                </p>
+                <p className="text-white">
+                  <strong>Status:</strong> {order.status}
+                </p>
+                <p className="text-white">
+                  <strong>Total Price:</strong> ${order.totalPrice.toFixed(2)}
+                </p>
+                <h3 className="text-lg text-white mt-4">Items:</h3>
+                {order.foodOrderItems.map((item, itemIndex) => {
+                  const food = foods.find((f) => f._id === item.food);
+                  return (
+                    <div
+                      key={itemIndex}
+                      className="flex items-center mt-2 bg-gray-700/30 p-3 rounded-lg"
+                    >
+                      <img
+                        src={food?.image || "/fallback-image.jpg"}
+                        alt={food?.foodName || "Unknown"}
+                        className="w-12 h-12 object-cover rounded-lg mr-4"
+                        onError={(e) =>
+                          (e.currentTarget.src = "/fallback-image.jpg")
+                        }
+                      />
+                      <div>
+                        <p className="text-white">
+                          <strong>{food?.foodName || "Unknown Food"}</strong> -
+                          Quantity: {item.quantity}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Ingredients:{" "}
+                          {food && typeof food.ingredients === "string"
+                            ? food.ingredients
+                            : "Not specified"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            <button
+              onClick={() => {
+                setCreatedOrders([]);
+                localStorage.removeItem("createdOrders"); // Clear from localStorage too
+              }}
+              className="mt-6 px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
+            >
+              Clear Orders
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
