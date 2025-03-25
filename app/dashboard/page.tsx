@@ -37,6 +37,7 @@ export default function Dashboard() {
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+  const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -138,7 +139,13 @@ export default function Dashboard() {
             <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
         </div>
-        <Bell className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors" />
+        <Bell
+          className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
+          onClick={() => {
+            console.log("Notif open", !isNotifOpen);
+            setIsNotifOpen(!isNotifOpen);
+          }}
+        />
         <ShoppingCart
           className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
           onClick={() => {
@@ -254,18 +261,7 @@ export default function Dashboard() {
                         (e.currentTarget.src = "/fallback-image.jpg")
                       }
                     />
-                    <div className="flex-1">
-                      <p className="text-white">
-                        <strong>{item.food.foodName || "Unknown Food"}</strong>{" "}
-                        - Quantity: {item.quantity}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Ingredients: {item.food.ingredients || "Not specified"}
-                      </p>
-                      <p className="text-sm text-orange-400">
-                        ${(item.food.price * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
+
                     <button
                       onClick={() => handleRemoveFromCart(item.food._id)}
                       className="ml-4 px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-300 shadow-md"
@@ -275,36 +271,25 @@ export default function Dashboard() {
                   </div>
                 ))
               )}
-              {selectedFoods.length > 0 && (
-                <p className="text-xl font-bold text-white mt-6">
-                  Total:{" "}
-                  <span className="text-orange-400">
-                    ${totalPrice.toFixed(2)}
-                  </span>
-                </p>
-              )}
-              <div className="flex justify-between mt-6">
-                <button
-                  onClick={() => setIsCartOpen(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
-                >
-                  Close
-                </button>
-                {selectedFoods.length > 0 && (
-                  <button
-                    onClick={navigateToOrder}
-                    className="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-all duration-300 shadow-md"
-                  >
-                    Proceed to Order
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         )}
-        {isCartOpen && (
-          <div>
-
+        {isNotifOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
+            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md ">
+              <div className="text-2xl font-semibold text-orange-400 mb-6">
+                Notification
+              </div>
+              <div className="mb-6 text-[18px] text-gray-400">
+                No notif yet
+              </div>
+              <button
+                className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
+                onClick={() => setIsNotifOpen(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </div>
