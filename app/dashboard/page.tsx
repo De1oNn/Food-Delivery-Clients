@@ -241,7 +241,7 @@ export default function Dashboard() {
         {/* Cart Modal */}
         {isCartOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
-            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md">
+            <div onClick={() => setIsCartOpen(false)} className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md">
               <h2 className="text-2xl font-semibold text-orange-400 mb-6">
                 Your Cart
               </h2>
@@ -261,7 +261,6 @@ export default function Dashboard() {
                         (e.currentTarget.src = "/fallback-image.jpg")
                       }
                     />
-
                     <button
                       onClick={() => handleRemoveFromCart(item.food._id)}
                       className="ml-4 px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-300 shadow-md"
@@ -280,9 +279,7 @@ export default function Dashboard() {
               <div className="text-2xl font-semibold text-orange-400 mb-6">
                 Notification
               </div>
-              <div className="mb-6 text-[18px] text-gray-400">
-                No notif yet
-              </div>
+              <div className="mb-6 text-[18px] text-gray-400">No notif yet</div>
               <button
                 className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
                 onClick={() => setIsNotifOpen(false)}
