@@ -4,20 +4,21 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
+interface Category {
+  _id: string;
+  categoryName: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Updated Food interface to reflect populated category as an object
 interface Food {
   _id: string;
   foodName: string;
   price: number;
   image: string;
   ingredients: string | string[] | undefined;
-  category: string;
-}
-
-interface Category {
-  _id: string;
-  categoryName: string;
-  createdAt?: string;
-  updatedAt?: string;
+  category: Category; // Changed from string to Category
 }
 
 interface SelectedFood {
@@ -186,20 +187,26 @@ export default function Order() {
 
   const back = () => router.push("/dashboard");
 
+  // Filter foods by selected category
   useEffect(() => {
     const filteredFoodsByCategory = selectedCategory
       ? foods.filter((food) => {
           const matches = food.category._id === selectedCategory;
-          console.log(food.category._id, selectedCategory);
+          console.log(
+            "Food category ID:",
+            food.category._id,
+            "Selected category:",
+            selectedCategory
+          );
           return matches;
         })
       : foods;
 
-    console.log(selectedCategory);
-    console.log(filteredFoodsByCategory);
+    console.log("Selected category:", selectedCategory);
+    console.log("Filtered foods:", filteredFoodsByCategory);
 
     setFilteredFoods(filteredFoodsByCategory);
-  }, [selectedCategory]);
+  }, [selectedCategory, foods]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
@@ -432,7 +439,7 @@ export default function Order() {
             <button
               onClick={() => {
                 setCreatedOrders([]);
-                localStorage.removeItem("createdOrders"); // Clear from localStorage too
+                localStorage.removeItem("createdOrders");
               }}
               className="mt-6 px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
             >
