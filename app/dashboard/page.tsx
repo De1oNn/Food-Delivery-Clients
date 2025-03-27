@@ -214,7 +214,7 @@ export default function Dashboard() {
               {filteredFoods.map((food) => (
                 <div
                   key={food._id}
-                  className="bg-gray-800/50 p-4 rounded-xl shadow-lg hover:shadow-orange-500/20 transition-all duration-300"
+                  className="bg-gray-800/50 p-4 rounded-xl shadow-lg hover:shadow-orange-500/20 transition-all duration-300 flex flex-col justify-between"
                 >
                   <img
                     src={food.image || "/fallback-image.jpg"}
@@ -289,6 +289,12 @@ export default function Dashboard() {
                   </div>
                 ))
               )}
+              <button
+                className="px-2 py-2 rounded-3xl bg-gray-500 text-white mt-[10px]"
+                onClick={() => setIsCartOpen(false)}
+              >
+                Close
+              </button>
             </div>
           </div>
         )}

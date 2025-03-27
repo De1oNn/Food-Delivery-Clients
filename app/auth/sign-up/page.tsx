@@ -4,6 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+interface Food {
+  _id: string;
+  foodName: string;
+  price: number;
+  image?: string;
+  ingredients?: string;
+  category?: { name: string } | null;
+}
+
 export default function Signup() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -15,6 +24,7 @@ export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const [leftImageIndex, setLeftImageIndex] = useState(0);
   const [rightImageIndex, setRightImageIndex] = useState(0);
+    const [foods, setFoods] = useState<Food[]>([]);
 
   // Left half background images (behind the form)
   const leftBackgroundImages = [
@@ -49,6 +59,28 @@ export default function Signup() {
     }, 2000); // 2 seconds
     return () => clearInterval(interval);
   }, [rightBackgroundImages.length]);
+
+  useEffect(() => {
+    const fetchFoods = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/food", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await response.json();
+        if (response.ok && Array.isArray(data.foods)) {
+          setFoods(data.foods); // Show all foods
+        } else {
+          console.error("Failed to fetch foods:", data.message);
+          setFoods([]);
+        }
+      } catch (err) {
+        console.error("Error fetching foods:", err);
+        setFoods([]);
+      }
+    };
+    fetchFoods();
+  }, []);
 
   const handleSignup = async () => {
     setMessage("");
@@ -202,7 +234,7 @@ export default function Signup() {
       </div>
 
       {/* Right Half: Slideshow Background */}
-      <div className="hidden md:flex flex-1 relative overflow-hidden">
+      <div className="hidden md:flex flex-1 relative overflow-hidden flex justify-center items-center">
         {/* Right Slideshow */}
         <div className="absolute inset-0">
           {rightBackgroundImages.map((src, index) => (
@@ -214,11 +246,52 @@ export default function Signup() {
               objectFit="cover"
               className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
                 index === rightImageIndex ? "opacity-70" : "opacity-0"
-              }`}
+              } `}
             />
           ))}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-l from-gray-900/50 to-transparent" />
+        {/* <div className="absolute inset-0 bg-gradient-to-l from-gray-900/50 to-transparent" /> */}
+        <div className="relative z-10 w-full h-[70vh] flex flex-col items-center justify-center p-6">
+          <h2 className="text-3xl font-bold text-orange-400 mb-4 text-center drop-shadow-md">
+            Our Menu
+          </h2>
+          <div className="w-[60vh] flex-1 overflow-y-auto">
+            {foods.length > 0 ? (
+              <ul className="space-y-4">
+                {foods.map((food) => (
+                  <li
+                    key={food._id}
+                    className="flex items-center space-x-3 bg-gray-800/70 p-3 rounded-xl shadow-lg border border-gray-700/30 hover:bg-gray-700/90 hover:shadow-orange-500/20 transition-all duration-300 transform hover:-translate-y-1"
+                  >
+                    {food.image && (
+                      <div className="flex-shrink-0">
+                        <Image
+                          src={food.image}
+                          alt={food.foodName}
+                          width={50}
+                          height={50}
+                          className="rounded-full object-cover border-2 border-orange-500/50"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-orange-400 truncate">
+                        {food.foodName}
+                      </h3>
+                      <p className="text-gray-400 text-xs truncate">
+                        ${food.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400 text-center text-sm">
+                No menu items available yet.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
