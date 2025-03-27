@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, ShoppingCart } from "lucide-react";
 import axios from "axios";
-import { div } from "framer-motion/m";
 
 interface User {
   _id: string;
@@ -29,6 +28,12 @@ interface SelectedFood {
   quantity: number;
 }
 
+interface Notification {
+  _id: string;
+  message: string;
+  createdAt: string;
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [foods, setFoods] = useState<Food[]>([]);
@@ -38,6 +43,7 @@ export default function Dashboard() {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -58,6 +64,7 @@ export default function Dashboard() {
 
     fetchUserData();
     fetchFoods();
+    fetchNotifications();
   }, [router]);
 
   const fetchFoods = async () => {
@@ -66,7 +73,6 @@ export default function Dashboard() {
       const res = await axios.get<{ foods: Food[] }>(
         "http://localhost:5000/food"
       );
-      console.log("Fetched foods:", res.data.foods);
       setFoods(res.data.foods || []);
     } catch (error) {
       console.error("Error fetching foods:", error);
@@ -75,8 +81,18 @@ export default function Dashboard() {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get<{ notifications: Notification[] }>(
+        "http://localhost:5000/notif"
+      );
+      setNotifications(res.data.notifications || []);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
   const handleFoodSelect = (food: Food, quantity: number = 1) => {
-    console.log("Adding food to cart:", food); // Debug log
     const existingFoodIndex = selectedFoods.findIndex(
       (item) => item.food._id === food._id
     );
@@ -98,11 +114,9 @@ export default function Dashboard() {
         0
       )
     );
-    console.log("Updated selectedFoods:", newSelectedFoods); // Debug log
   };
 
   const handleRemoveFromCart = (foodId: string) => {
-    console.log("Removing food from cart:", foodId); // Debug log
     const newSelectedFoods = selectedFoods.filter(
       (item) => item.food._id !== foodId
     );
@@ -139,19 +153,24 @@ export default function Dashboard() {
             <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
         </div>
-        <Bell
-          className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
-          onClick={() => {
-            console.log("Notif open", !isNotifOpen);
-            setIsNotifOpen(!isNotifOpen);
-          }}
-        />
+        {/* Notification Bell with Badge */}
+        <div className="relative">
+          <Bell
+            className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
+            onClick={() => {
+              setIsNotifOpen(!isNotifOpen);
+              fetchNotifications();
+            }}
+          />
+          {notifications.length > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              {notifications.length}
+            </span>
+          )}
+        </div>
         <ShoppingCart
           className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
-          onClick={() => {
-            console.log("Cart clicked, isCartOpen:", !isCartOpen); // Debug log
-            setIsCartOpen(!isCartOpen);
-          }}
+          onClick={() => setIsCartOpen(!isCartOpen)}
         />
       </aside>
 
@@ -241,7 +260,7 @@ export default function Dashboard() {
         {/* Cart Modal */}
         {isCartOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
-            <div onClick={() => setIsCartOpen(false)} className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md">
+            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md">
               <h2 className="text-2xl font-semibold text-orange-400 mb-6">
                 Your Cart
               </h2>
@@ -273,13 +292,33 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Notification Modal */}
         {isNotifOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
-            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md ">
-              <div className="text-2xl font-semibold text-orange-400 mb-6">
-                Notification
-              </div>
-              <div className="mb-6 text-[18px] text-gray-400">No notif yet</div>
+            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md">
+              <h2 className="text-2xl font-semibold text-orange-400 mb-6">
+                Notifications
+              </h2>
+              {notifications.length === 0 ? (
+                <p className="mb-6 text-[18px] text-gray-400">
+                  No notifications yet
+                </p>
+              ) : (
+                <div className="max-h-64 overflow-y-auto">
+                  {notifications.map((notif) => (
+                    <div
+                      key={notif._id}
+                      className="mb-4 p-3 bg-gray-700/30 rounded-lg"
+                    >
+                      <p className="text-gray-200">{notif.message}</p>
+                      <p className="text-xs text-gray-400">
+                        {new Date(notif.createdAt).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
               <button
                 className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
                 onClick={() => setIsNotifOpen(false)}
