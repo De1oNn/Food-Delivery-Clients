@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, ShoppingCart } from "lucide-react";
+import { Bell, ShoppingCart, MapPin, Settings } from "lucide-react";
 import axios from "axios";
 
 interface User {
@@ -34,6 +34,16 @@ interface Notification {
   createdAt: string;
 }
 
+interface Restaurant {
+  _id: string;
+  location: string;
+  picture: string;
+  name: string;
+  information: string;
+  phoneNumber: number;
+  createdAt: string;
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [foods, setFoods] = useState<Food[]>([]);
@@ -44,6 +54,12 @@ export default function Dashboard() {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isRestaurantModalOpen, setIsRestaurantModalOpen] =
+    useState<boolean>(false);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [restaurantLoading, setRestaurantLoading] = useState<boolean>(false);
+  const [restaurantError, setRestaurantError] = useState<string | null>(null);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -63,9 +79,21 @@ export default function Dashboard() {
     };
 
     fetchUserData();
-    fetchFoods();
-    fetchNotifications();
   }, [router]);
+
+  useEffect(() => {
+    fetchFoods();
+  }, []);
+
+  useEffect(() => {
+    if (isRestaurantModalOpen) {
+      fetchRestaurants();
+    }
+  }, [isRestaurantModalOpen]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const fetchFoods = async () => {
     try {
@@ -78,6 +106,24 @@ export default function Dashboard() {
       console.error("Error fetching foods:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRestaurants = async () => {
+    setRestaurantLoading(true);
+    setRestaurantError(null);
+    try {
+      const res = await axios.get<{ restaurants: Restaurant[] }>(
+        "http://localhost:5000/restaurant"
+      );
+      setRestaurants(res.data.restaurants || []);
+    } catch (error: any) {
+      console.error("Fetch Restaurants Error:", error);
+      setRestaurantError(
+        error.response?.data?.message || "Failed to load restaurants."
+      );
+    } finally {
+      setRestaurantLoading(false);
     }
   };
 
@@ -131,6 +177,11 @@ export default function Dashboard() {
 
   const navigateToProfile = () => router.push("/dashboard/profile");
   const navigateToOrder = () => router.push("/order");
+  const navigateToRestaurant = (restaurantId: string) => {
+    router.push(`/restaurant/${restaurantId}`);
+    setIsRestaurantModalOpen(false);
+  };
+  const navigateToSettings = () => router.push("/settings");
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -153,7 +204,6 @@ export default function Dashboard() {
             <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
         </div>
-        {/* Notification Bell with Badge */}
         <div className="relative">
           <Bell
             className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
@@ -171,6 +221,14 @@ export default function Dashboard() {
         <ShoppingCart
           className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
           onClick={() => setIsCartOpen(!isCartOpen)}
+        />
+        <MapPin
+          className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
+          onClick={() => setIsRestaurantModalOpen(true)}
+        />
+        <Settings
+          className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
+          onClick={navigateToSettings}
         />
       </aside>
 
@@ -239,7 +297,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center space-y-8">
+            <div className="text-center space-y-8 w-full">
               <h1 className="text-5xl font-extrabold tracking-tight">
                 Food<span className="text-orange-500">Board</span>
               </h1>
@@ -253,6 +311,38 @@ export default function Dashboard() {
               >
                 Order Now
               </button>
+
+              {/* Infinite Scrolling Food Marquee */}
+              {foods.length > 0 && (
+                <div className="overflow-hidden mt-8">
+                  <div className="marquee flex gap-6">
+                    {[...foods, ...foods].map(
+                      (
+                        food,
+                        index // Duplicate foods for seamless loop
+                      ) => (
+                        <div
+                          key={`${food._id}-${index}`}
+                          className="bg-gray-800/50 p-4 rounded-xl shadow-lg flex-shrink-0 w-64"
+                        >
+                          <img
+                            src={food.image || "/fallback-image.jpg"}
+                            alt={food.foodName}
+                            className="w-full h-32 object-cover rounded-lg mb-2"
+                          />
+                          <p className="text-lg font-medium">{food.foodName}</p>
+                          <p className="text-sm text-gray-300">
+                            ${food.price.toFixed(2)}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {food.ingredients || "No ingredients listed"}
+                          </p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </main>
@@ -334,7 +424,88 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Restaurant Modal */}
+        {isRestaurantModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
+            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
+              <h2 className="text-2xl font-semibold text-orange-400 mb-6">
+                Nearby Restaurants
+              </h2>
+              {restaurantLoading ? (
+                <p className="text-gray-400 animate-pulse">
+                  Loading restaurants...
+                </p>
+              ) : restaurantError ? (
+                <p className="text-red-400">{restaurantError}</p>
+              ) : restaurants.length === 0 ? (
+                <p className="text-gray-400">No restaurants found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {restaurants.map((restaurant) => (
+                    <div
+                      key={restaurant._id}
+                      className="bg-gray-700/30 p-4 rounded-lg cursor-pointer hover:bg-gray-600/30 transition-all duration-300"
+                      onClick={() => navigateToRestaurant(restaurant._id)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={restaurant.picture || "/fallback-image.jpg"}
+                          alt={restaurant.name}
+                          className="w-16 h-16 object-cover rounded-lg"
+                          onError={(e) =>
+                            (e.currentTarget.src = "/fallback-image.jpg")
+                          }
+                        />
+                        <div>
+                          <h3 className="text-lg font-medium text-white">
+                            {restaurant.name}
+                          </h3>
+                          <p className="text-sm text-gray-300">
+                            {restaurant.location}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Phone: {restaurant.phoneNumber}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {restaurant.information}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                className="mt-6 px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
+                onClick={() => setIsRestaurantModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* CSS for Marquee Animation */}
+      <style jsx>{`
+        .marquee {
+          display: flex;
+          animation: marquee 20s linear infinite;
+          white-space: nowrap;
+        }
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+        .marquee:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </div>
   );
 }
