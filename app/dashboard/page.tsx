@@ -54,8 +54,7 @@ export default function Dashboard() {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isRestaurantModalOpen, setIsRestaurantModalOpen] =
-    useState<boolean>(false);
+  const [isRestaurantModalOpen, setIsRestaurantModalOpen] = useState<boolean>(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [restaurantLoading, setRestaurantLoading] = useState<boolean>(false);
   const [restaurantError, setRestaurantError] = useState<string | null>(null);
@@ -83,6 +82,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchFoods();
+    fetchRestaurants();
   }, []);
 
   useEffect(() => {
@@ -98,9 +98,7 @@ export default function Dashboard() {
   const fetchFoods = async () => {
     try {
       setLoading(true);
-      const res = await axios.get<{ foods: Food[] }>(
-        "http://localhost:5000/food"
-      );
+      const res = await axios.get<{ foods: Food[] }>("http://localhost:5000/food");
       setFoods(res.data.foods || []);
     } catch (error) {
       console.error("Error fetching foods:", error);
@@ -113,15 +111,11 @@ export default function Dashboard() {
     setRestaurantLoading(true);
     setRestaurantError(null);
     try {
-      const res = await axios.get<{ restaurants: Restaurant[] }>(
-        "http://localhost:5000/restaurant"
-      );
+      const res = await axios.get<{ restaurants: Restaurant[] }>("http://localhost:5000/restaurant");
       setRestaurants(res.data.restaurants || []);
     } catch (error: any) {
       console.error("Fetch Restaurants Error:", error);
-      setRestaurantError(
-        error.response?.data?.message || "Failed to load restaurants."
-      );
+      setRestaurantError(error.response?.data?.message || "Failed to load restaurants.");
     } finally {
       setRestaurantLoading(false);
     }
@@ -129,9 +123,7 @@ export default function Dashboard() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get<{ notifications: Notification[] }>(
-        "http://localhost:5000/notif"
-      );
+      const res = await axios.get<{ notifications: Notification[] }>("http://localhost:5000/notif");
       setNotifications(res.data.notifications || []);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -139,40 +131,24 @@ export default function Dashboard() {
   };
 
   const handleFoodSelect = (food: Food, quantity: number = 1) => {
-    const existingFoodIndex = selectedFoods.findIndex(
-      (item) => item.food._id === food._id
-    );
+    const existingFoodIndex = selectedFoods.findIndex((item) => item.food._id === food._id);
     let newSelectedFoods: SelectedFood[];
     if (existingFoodIndex >= 0) {
       newSelectedFoods = selectedFoods.map((item, index) =>
-        index === existingFoodIndex
-          ? { ...item, quantity: item.quantity + quantity }
-          : item
+        index === existingFoodIndex ? { ...item, quantity: item.quantity + quantity } : item
       );
     } else {
       newSelectedFoods = [...selectedFoods, { food, quantity }];
     }
     newSelectedFoods = newSelectedFoods.filter((item) => item.quantity > 0);
     setSelectedFoods(newSelectedFoods);
-    setTotalPrice(
-      newSelectedFoods.reduce(
-        (sum, item) => sum + item.food.price * item.quantity,
-        0
-      )
-    );
+    setTotalPrice(newSelectedFoods.reduce((sum, item) => sum + item.food.price * item.quantity, 0));
   };
 
   const handleRemoveFromCart = (foodId: string) => {
-    const newSelectedFoods = selectedFoods.filter(
-      (item) => item.food._id !== foodId
-    );
+    const newSelectedFoods = selectedFoods.filter((item) => item.food._id !== foodId);
     setSelectedFoods(newSelectedFoods);
-    setTotalPrice(
-      newSelectedFoods.reduce(
-        (sum, item) => sum + item.food.price * item.quantity,
-        0
-      )
-    );
+    setTotalPrice(newSelectedFoods.reduce((sum, item) => sum + item.food.price * item.quantity, 0));
   };
 
   const navigateToProfile = () => router.push("/dashboard/profile");
@@ -233,7 +209,7 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className="ml-[100px] p-6">
+      <div className="ml-[100px] p-6 relative">
         {/* Header */}
         <header className="bg-gray-800/50 backdrop-blur-lg rounded-xl shadow-lg p-4 flex justify-center items-center mb-6">
           <div className="relative flex items-center w-full max-w-md">
@@ -262,7 +238,10 @@ export default function Dashboard() {
         </header>
 
         {/* Main Section */}
-        <main className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)]">
+        <main className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] relative">
+          {/* Background Logo */}
+          <div className="background-logo" />
+
           {loading ? (
             <p className="text-gray-400 animate-pulse">Loading foods...</p>
           ) : searchQuery && filteredFoods.length === 0 ? (
@@ -297,7 +276,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="text-center space-y-8 w-full">
+            <div className="text-center space-y-8 w-full relative z-10">
               <h1 className="text-5xl font-extrabold tracking-tight">
                 Food<span className="text-orange-500">Board</span>
               </h1>
@@ -315,27 +294,60 @@ export default function Dashboard() {
               {/* Infinite Scrolling Food Marquee */}
               {foods.length > 0 && (
                 <div className="overflow-hidden mt-8">
+                  <div className="marquee-title">Foods we offer!!</div>
                   <div className="marquee flex gap-6">
-                    {[...foods, ...foods].map(
-                      (
-                        food,
-                        index // Duplicate foods for seamless loop
-                      ) => (
+                    {[...foods, ...foods].map((food, index) => (
+                      <div
+                        key={`${food._id}-${index}`}
+                        className="bg-gray-800/50 p-4 rounded-xl shadow-lg flex-shrink-0 w-64"
+                      >
+                        <img
+                          src={food.image || "/fallback-image.jpg"}
+                          alt={food.foodName}
+                          className="w-full h-32 object-cover rounded-lg mb-2"
+                        />
+                        <p className="text-lg font-medium">{food.foodName}</p>
+                        <p className="text-sm text-gray-300">
+                          ${food.price.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {food.ingredients || "No ingredients listed"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Infinite Scrolling Restaurant Marquee */}
+              {restaurants.length > 0 && (
+                <div className="overflow-hidden mt-8">
+                  <div className="bg-[black] w-[100%]">
+                    <div className="marquee-title">
+                      Restaurants partnership with us!!
+                    </div>
+                  </div>
+                  <div className="marquee flex gap-6">
+                    {[...restaurants, ...restaurants].map(
+                      (restaurant, index) => (
                         <div
-                          key={`${food._id}-${index}`}
+                          key={`${restaurant._id}-${index}`}
                           className="bg-gray-800/50 p-4 rounded-xl shadow-lg flex-shrink-0 w-64"
                         >
                           <img
-                            src={food.image || "/fallback-image.jpg"}
-                            alt={food.foodName}
+                            src={restaurant.picture || "/fallback-image.jpg"}
+                            alt={restaurant.name}
                             className="w-full h-32 object-cover rounded-lg mb-2"
                           />
-                          <p className="text-lg font-medium">{food.foodName}</p>
+                          <p className="text-lg font-medium">
+                            {restaurant.name}
+                          </p>
                           <p className="text-sm text-gray-300">
-                            ${food.price.toFixed(2)}
+                            {restaurant.location}
                           </p>
                           <p className="text-xs text-gray-400 truncate">
-                            {food.ingredients || "No ingredients listed"}
+                            {restaurant.information ||
+                              "No information available"}
                           </p>
                         </div>
                       )
@@ -487,7 +499,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* CSS for Marquee Animation */}
+      {/* CSS for Marquee and Background Logo */}
       <style jsx>{`
         .marquee {
           display: flex;
@@ -504,6 +516,38 @@ export default function Dashboard() {
         }
         .marquee:hover {
           animation-play-state: paused;
+        }
+        .marquee-title {
+          text-align: left;
+          font-size: 1.5rem; /* 24px */
+          font-weight: bold;
+          color: #f97316; /* Orange-500 */
+          margin-bottom: 1rem;
+          padding-left: 1rem;
+        }
+        .background-logo {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 200%; /* Double width for seamless loop */
+          height: 100%;
+          background-image: url("/logo.png"); /* Replace with your logo path */
+          background-repeat: repeat-x;
+          background-size: 300px 300px; /* Adjust size of the logo */
+          filter: blur(10px); /* Blur effect */
+          opacity: 0.1; /* Faint visibility */
+          animation: backgroundScroll 30s linear infinite; /* Infinite scroll */
+          z-index: 0; /* Behind content */
+        }
+        @keyframes backgroundScroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(
+              -50%
+            ); /* Moves half its width for seamless loop */
+          }
         }
       `}</style>
     </div>
