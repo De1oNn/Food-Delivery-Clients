@@ -335,7 +335,7 @@ export default function Dashboard() {
                           className="bg-gray-800/50 p-4 rounded-xl shadow-lg flex-shrink-0 w-64"
                         >
                           <img
-                            src={restaurant.picture || "/fallback-image.jpg"}
+                            src={restaurant.picture}
                             alt={restaurant.name}
                             className="w-full h-32 object-cover rounded-lg mb-2"
                           />
@@ -498,14 +498,21 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-
-      {/* CSS for Marquee and Background Logo */}
       <style jsx>{`
+        /* Container for the marquee section */
+        .marquee-container {
+          width: 100%;
+          overflow: hidden;
+          position: relative;
+        }
+
         .marquee {
           display: flex;
           animation: marquee 20s linear infinite;
-          white-space: nowrap;
+          /* Removed white-space: nowrap */
+          gap: 1.5rem; /* Matches your flex gap-6 */
         }
+
         @keyframes marquee {
           0% {
             transform: translateX(0);
@@ -514,40 +521,48 @@ export default function Dashboard() {
             transform: translateX(-50%);
           }
         }
+
         .marquee:hover {
           animation-play-state: paused;
         }
+
         .marquee-title {
           text-align: left;
-          font-size: 1.5rem; /* 24px */
+          font-size: 1.5rem;
           font-weight: bold;
-          color: #f97316; /* Orange-500 */
+          color: #f97316;
           margin-bottom: 1rem;
           padding-left: 1rem;
         }
+
         .background-logo {
           position: absolute;
           top: 0;
           left: 0;
-          width: 200%; /* Double width for seamless loop */
+          width: 100%; /* Changed from 200% to prevent overflow */
           height: 100%;
-          background-image: url("/logo.png"); /* Replace with your logo path */
+          background-image: url("/logo.png");
           background-repeat: repeat-x;
-          background-size: 300px 300px; /* Adjust size of the logo */
-          filter: blur(10px); /* Blur effect */
-          opacity: 0.1; /* Faint visibility */
-          animation: backgroundScroll 30s linear infinite; /* Infinite scroll */
-          z-index: 0; /* Behind content */
+          background-size: 300px 300px;
+          filter: blur(10px);
+          opacity: 0.1;
+          animation: backgroundScroll 30s linear infinite;
+          z-index: 0;
         }
+
         @keyframes backgroundScroll {
           0% {
-            transform: translateX(0);
+            background-position: 0 0;
           }
           100% {
-            transform: translateX(
-              -50%
-            ); /* Moves half its width for seamless loop */
+            background-position: -300px 0; /* Matches background-size width */
           }
+        }
+
+        /* Ensure main content stays within bounds */
+        main {
+          overflow-x: hidden;
+          position: relative;
         }
       `}</style>
     </div>
