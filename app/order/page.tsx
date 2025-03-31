@@ -128,6 +128,10 @@ export default function Order() {
     const foodItem = selectedFoods.find((item) => item.food._id === foodId);
     if (foodItem) handleFoodSelect(foodItem.food, -1);
   };
+    const handleIncreaseQuantity = (foodId: string) => {
+      const foodItem = selectedFoods.find((item) => item.food._id === foodId);
+      if (foodItem) handleFoodSelect(foodItem.food, +1);
+    };
 
   const handleDeleteFood = (foodId: string) => {
     const newSelectedFoods = selectedFoods.filter(
@@ -358,6 +362,13 @@ export default function Order() {
                     className="px-3 py-1 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 disabled:bg-gray-500 transition-all duration-300 shadow-md"
                   >
                     -
+                  </button>
+                  <button
+                    onClick={() => handleIncreaseQuantity(item.food._id)}
+                    disabled={loading}
+                    className="px-3 py-1 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 disabled:bg-gray-500 transition-all duration-300 shadow-md"
+                  >
+                    + 
                   </button>
                   <button
                     onClick={() => handleDeleteFood(item.food._id)}

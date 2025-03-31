@@ -44,6 +44,20 @@ interface Restaurant {
   createdAt: string;
 }
 
+interface FoodOrderItem {
+  food: Food | null;
+  quantity: number;
+}
+
+interface Order {
+  _id: string;
+  user: { name: string };
+  email?: string;
+  foodOrderItems: FoodOrderItem[];
+  createdAt: string;
+  status: "PENDING" | "CANCELED" | "DELIVERED";
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [foods, setFoods] = useState<Food[]>([]);
@@ -54,10 +68,13 @@ export default function Dashboard() {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isRestaurantModalOpen, setIsRestaurantModalOpen] = useState<boolean>(false);
+  const [isRestaurantModalOpen, setIsRestaurantModalOpen] =
+    useState<boolean>(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [restaurantLoading, setRestaurantLoading] = useState<boolean>(false);
   const [restaurantError, setRestaurantError] = useState<string | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [orderLoading, setOrderLoading] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -68,6 +85,7 @@ export default function Dashboard() {
         try {
           const parsedUser: User = JSON.parse(storedUser);
           setUser(parsedUser);
+          fetchOrders(parsedUser.name); // Fetch orders on mount
         } catch (err) {
           console.error("Error parsing user data:", err);
           router.push("/login");
@@ -83,6 +101,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchFoods();
     fetchRestaurants();
+    fetchNotifications();
   }, []);
 
   useEffect(() => {
@@ -92,13 +111,47 @@ export default function Dashboard() {
   }, [isRestaurantModalOpen]);
 
   useEffect(() => {
-    fetchNotifications();
-  }, []);
+    if (isCartOpen && user) {
+      fetchOrders(user.name); // Refresh orders when cart opens
+    }
+  }, [isCartOpen, user]);
+
+const fetchOrders = async (username: string) => {
+  try {
+    setOrderLoading(true);
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
+
+    const response = await axios.get<{ orders: Order[] }>(
+      `http://localhost:5000/order?username=${encodeURIComponent(username)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log("Orders response:", response.data); // Log success
+    setOrders(response.data.orders || []);
+  } catch (error: any) {
+    // console.error("Error fetching orders:", {
+    //   message: error.message,
+    //   status: error.response?.status,
+    //   data: error.response?.data,
+    // });
+    if (error.response?.status === 404) {
+      setOrders([]); // Handle no orders found gracefully
+    }
+  } finally {
+    setOrderLoading(false);
+  }
+};
 
   const fetchFoods = async () => {
     try {
       setLoading(true);
-      const res = await axios.get<{ foods: Food[] }>("http://localhost:5000/food");
+      const res = await axios.get<{ foods: Food[] }>(
+        "http://localhost:5000/food"
+      );
       setFoods(res.data.foods || []);
     } catch (error) {
       console.error("Error fetching foods:", error);
@@ -111,11 +164,15 @@ export default function Dashboard() {
     setRestaurantLoading(true);
     setRestaurantError(null);
     try {
-      const res = await axios.get<{ restaurants: Restaurant[] }>("http://localhost:5000/restaurant");
+      const res = await axios.get<{ restaurants: Restaurant[] }>(
+        "http://localhost:5000/restaurant"
+      );
       setRestaurants(res.data.restaurants || []);
     } catch (error: any) {
       console.error("Fetch Restaurants Error:", error);
-      setRestaurantError(error.response?.data?.message || "Failed to load restaurants.");
+      setRestaurantError(
+        error.response?.data?.message || "Failed to load restaurants."
+      );
     } finally {
       setRestaurantLoading(false);
     }
@@ -123,7 +180,9 @@ export default function Dashboard() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get<{ notifications: Notification[] }>("http://localhost:5000/notif");
+      const res = await axios.get<{ notifications: Notification[] }>(
+        "http://localhost:5000/notif"
+      );
       setNotifications(res.data.notifications || []);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -131,24 +190,40 @@ export default function Dashboard() {
   };
 
   const handleFoodSelect = (food: Food, quantity: number = 1) => {
-    const existingFoodIndex = selectedFoods.findIndex((item) => item.food._id === food._id);
+    const existingFoodIndex = selectedFoods.findIndex(
+      (item) => item.food._id === food._id
+    );
     let newSelectedFoods: SelectedFood[];
     if (existingFoodIndex >= 0) {
       newSelectedFoods = selectedFoods.map((item, index) =>
-        index === existingFoodIndex ? { ...item, quantity: item.quantity + quantity } : item
+        index === existingFoodIndex
+          ? { ...item, quantity: item.quantity + quantity }
+          : item
       );
     } else {
       newSelectedFoods = [...selectedFoods, { food, quantity }];
     }
     newSelectedFoods = newSelectedFoods.filter((item) => item.quantity > 0);
     setSelectedFoods(newSelectedFoods);
-    setTotalPrice(newSelectedFoods.reduce((sum, item) => sum + item.food.price * item.quantity, 0));
+    setTotalPrice(
+      newSelectedFoods.reduce(
+        (sum, item) => sum + item.food.price * item.quantity,
+        0
+      )
+    );
   };
 
   const handleRemoveFromCart = (foodId: string) => {
-    const newSelectedFoods = selectedFoods.filter((item) => item.food._id !== foodId);
+    const newSelectedFoods = selectedFoods.filter(
+      (item) => item.food._id !== foodId
+    );
     setSelectedFoods(newSelectedFoods);
-    setTotalPrice(newSelectedFoods.reduce((sum, item) => sum + item.food.price * item.quantity, 0));
+    setTotalPrice(
+      newSelectedFoods.reduce(
+        (sum, item) => sum + item.food.price * item.quantity,
+        0
+      )
+    );
   };
 
   const navigateToProfile = () => router.push("/dashboard/profile");
@@ -166,6 +241,14 @@ export default function Dashboard() {
   const filteredFoods = foods.filter((food) =>
     food.foodName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getTotalPrice = (order: Order) =>
+    order.foodOrderItems
+      .reduce((acc, item) => {
+        if (!item.food) return acc;
+        return acc + (item.food.price ?? 0) * (item.quantity ?? 0);
+      }, 0)
+      .toFixed(2);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -196,7 +279,10 @@ export default function Dashboard() {
         </div>
         <ShoppingCart
           className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
-          onClick={() => setIsCartOpen(!isCartOpen)}
+          onClick={() => {
+            setIsCartOpen(!isCartOpen);
+            if (user) fetchOrders(user.name); // Ensure orders are fresh
+          }}
         />
         <MapPin
           className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
@@ -322,10 +408,8 @@ export default function Dashboard() {
               {/* Infinite Scrolling Restaurant Marquee */}
               {restaurants.length > 0 && (
                 <div className="overflow-hidden mt-8">
-                  <div className="bg-[black] w-[100%]">
-                    <div className="marquee-title">
-                      Restaurants partnership with us!!
-                    </div>
+                  <div className="marquee-title">
+                    Restaurants partnership with us!!
                   </div>
                   <div className="marquee flex gap-6">
                     {[...restaurants, ...restaurants].map(
@@ -359,40 +443,74 @@ export default function Dashboard() {
           )}
         </main>
 
-        {/* Cart Modal */}
+        {/* Cart Modal - Now showing Orders */}
         {isCartOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
-            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-md">
+            <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
               <h2 className="text-2xl font-semibold text-orange-400 mb-6">
-                Your Cart
+                Your Orders
               </h2>
-              {selectedFoods.length === 0 ? (
-                <p className="text-gray-400">No items in your cart yet.</p>
+              {orderLoading ? (
+                <p className="text-gray-400 animate-pulse">Loading orders...</p>
+              ) : orders.length === 0 ? (
+                <p className="text-gray-400">No orders found.</p>
               ) : (
-                selectedFoods.map((item) => (
-                  <div
-                    key={item.food._id}
-                    className="flex items-center mt-2 bg-gray-700/30 p-3 rounded-lg"
-                  >
-                    <img
-                      src={item.food.image || "/fallback-image.jpg"}
-                      alt={item.food.foodName || "Unknown"}
-                      className="w-12 h-12 object-cover rounded-lg mr-4"
-                      onError={(e) =>
-                        (e.currentTarget.src = "/fallback-image.jpg")
-                      }
-                    />
-                    <button
-                      onClick={() => handleRemoveFromCart(item.food._id)}
-                      className="ml-4 px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-300 shadow-md"
+                <div className="space-y-4">
+                  {orders.map((order) => (
+                    <div
+                      key={order._id}
+                      className="bg-gray-700/30 p-4 rounded-lg"
                     >
-                      Remove
-                    </button>
-                  </div>
-                ))
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-lg font-medium text-white">
+                            Order #{order._id.slice(-6)}
+                          </p>
+                          <p className="text-sm text-gray-300">
+                            Date:{" "}
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </p>
+                          <p className="text-sm text-gray-300">
+                            Total: ${getTotalPrice(order)}
+                          </p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            order.status === "PENDING"
+                              ? "bg-yellow-500/20 text-yellow-300"
+                              : order.status === "DELIVERED"
+                              ? "bg-green-500/20 text-green-300"
+                              : "bg-red-500/20 text-red-300"
+                          }`}
+                        >
+                          {order.status}
+                        </span>
+                      </div>
+                      <div className="mt-2">
+                        {order.foodOrderItems.map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 text-sm text-gray-400"
+                          >
+                            <img
+                              src={item.food?.image || "/fallback-image.jpg"}
+                              alt={item.food?.foodName || "Unknown"}
+                              className="w-8 h-8 object-cover rounded-lg"
+                              onError={(e) =>
+                                (e.currentTarget.src = "/fallback-image.jpg")
+                              }
+                            />
+                            <span>{item.food?.foodName || "Unknown Food"}</span>
+                            <span>x{item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
               <button
-                className="px-2 py-2 rounded-3xl bg-gray-500 text-white mt-[10px]"
+                className="mt-6 px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
                 onClick={() => setIsCartOpen(false)}
               >
                 Close
@@ -498,21 +616,13 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-      <style jsx>{`
-        /* Container for the marquee section */
-        .marquee-container {
-          width: 100%;
-          overflow: hidden;
-          position: relative;
-        }
 
+      <style jsx>{`
         .marquee {
           display: flex;
           animation: marquee 20s linear infinite;
-          /* Removed white-space: nowrap */
-          gap: 1.5rem; /* Matches your flex gap-6 */
+          white-space: nowrap;
         }
-
         @keyframes marquee {
           0% {
             transform: translateX(0);
@@ -521,11 +631,9 @@ export default function Dashboard() {
             transform: translateX(-50%);
           }
         }
-
         .marquee:hover {
           animation-play-state: paused;
         }
-
         .marquee-title {
           text-align: left;
           font-size: 1.5rem;
@@ -534,12 +642,11 @@ export default function Dashboard() {
           margin-bottom: 1rem;
           padding-left: 1rem;
         }
-
         .background-logo {
           position: absolute;
           top: 0;
           left: 0;
-          width: 100%; /* Changed from 200% to prevent overflow */
+          width: 200%;
           height: 100%;
           background-image: url("/logo.png");
           background-repeat: repeat-x;
@@ -549,20 +656,13 @@ export default function Dashboard() {
           animation: backgroundScroll 30s linear infinite;
           z-index: 0;
         }
-
         @keyframes backgroundScroll {
           0% {
-            background-position: 0 0;
+            transform: translateX(0);
           }
           100% {
-            background-position: -300px 0; /* Matches background-size width */
+            transform: translateX(-50%);
           }
-        }
-
-        /* Ensure main content stays within bounds */
-        main {
-          overflow-x: hidden;
-          position: relative;
         }
       `}</style>
     </div>
