@@ -11,14 +11,13 @@ interface Category {
   updatedAt?: string;
 }
 
-// Updated Food interface to reflect populated category as an object
 interface Food {
   _id: string;
   foodName: string;
   price: number;
   image: string;
   ingredients: string | string[] | undefined;
-  category: Category; // Changed from string to Category
+  category: Category;
 }
 
 interface SelectedFood {
@@ -46,8 +45,8 @@ export default function Order() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [filteredFoods, setFilteredFoods] = useState<Food[]>([]);
   const [createdOrders, setCreatedOrders] = useState<Order[]>([]);
+  const [reviewCardOpen, setReviewCardOpen] = useState<boolean>(false); // Card for review step
 
-  // Load orders from localStorage on mount
   useEffect(() => {
     const savedOrders = localStorage.getItem("createdOrders");
     if (savedOrders) {
@@ -57,7 +56,6 @@ export default function Order() {
     getCategories();
   }, []);
 
-  // Save orders to localStorage whenever createdOrders changes
   useEffect(() => {
     if (createdOrders.length > 0) {
       localStorage.setItem("createdOrders", JSON.stringify(createdOrders));
@@ -128,10 +126,11 @@ export default function Order() {
     const foodItem = selectedFoods.find((item) => item.food._id === foodId);
     if (foodItem) handleFoodSelect(foodItem.food, -1);
   };
-    const handleIncreaseQuantity = (foodId: string) => {
-      const foodItem = selectedFoods.find((item) => item.food._id === foodId);
-      if (foodItem) handleFoodSelect(foodItem.food, +1);
-    };
+
+  const handleIncreaseQuantity = (foodId: string) => {
+    const foodItem = selectedFoods.find((item) => item.food._id === foodId);
+    if (foodItem) handleFoodSelect(foodItem.food, 1);
+  };
 
   const handleDeleteFood = (foodId: string) => {
     const newSelectedFoods = selectedFoods.filter(
@@ -176,6 +175,7 @@ export default function Order() {
       setCreatedOrders((prevOrders) => [...prevOrders, res.data.order]);
       setSelectedFoods([]);
       setTotalPrice(0);
+      setReviewCardOpen(false); // Close review card after placing order
       alert(res.data.message);
     } catch (error) {
       console.error("Error creating order:", error);
@@ -189,26 +189,16 @@ export default function Order() {
     }
   };
 
+  const openReviewCard = () => {
+    if (selectedFoods.length > 0) setReviewCardOpen(true);
+  };
+
   const back = () => router.push("/dashboard");
 
-  // Filter foods by selected category
   useEffect(() => {
     const filteredFoodsByCategory = selectedCategory
-      ? foods.filter((food) => {
-          const matches = food.category._id === selectedCategory;
-          console.log(
-            "Food category ID:",
-            food.category._id,
-            "Selected category:",
-            selectedCategory
-          );
-          return matches;
-        })
+      ? foods.filter((food) => food.category._id === selectedCategory)
       : foods;
-
-    console.log("Selected category:", selectedCategory);
-    console.log("Filtered foods:", filteredFoodsByCategory);
-
     setFilteredFoods(filteredFoodsByCategory);
   }, [selectedCategory, foods]);
 
@@ -323,6 +313,7 @@ export default function Order() {
           )}
         </div>
 
+        {/* Your Order Section */}
         <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg">
           <h2 className="text-2xl font-semibold text-orange-400 mb-6">
             Your Order
@@ -368,7 +359,7 @@ export default function Order() {
                     disabled={loading}
                     className="px-3 py-1 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 disabled:bg-gray-500 transition-all duration-300 shadow-md"
                   >
-                    + 
+                    +
                   </button>
                   <button
                     onClick={() => handleDeleteFood(item.food._id)}
@@ -387,13 +378,98 @@ export default function Order() {
           </p>
           {error && <p className="text-red-400 mt-2">{error}</p>}
           <button
-            onClick={createOrder}
+            onClick={openReviewCard}
             disabled={loading || selectedFoods.length === 0}
             className="mt-6 w-full px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 disabled:bg-gray-500 transition-all duration-300 shadow-lg hover:shadow-orange-500/30"
           >
-            {loading ? "Processing..." : "Place Order"}
+            Review Order
           </button>
         </div>
+
+        {/* Review Order Card */}
+        {reviewCardOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 p-6 rounded-xl shadow-lg max-w-lg w-full">
+              <h3 className="text-2xl font-semibold text-orange-400 mb-4">
+                Review Your Order
+              </h3>
+              {selectedFoods.map((item) => (
+                <div
+                  key={item.food._id}
+                  className="flex items-center mb-4 border-b border-gray-700/50 pb-4 last:border-b-0"
+                >
+                  <img
+                    src={item.food.image}
+                    alt={item.food.foodName}
+                    className="w-12 h-12 object-cover rounded-lg mr-4"
+                    onError={(e) =>
+                      (e.currentTarget.src = "/fallback-image.jpg")
+                    }
+                  />
+                  <div className="flex-1">
+                    <p className="text-lg text-white">
+                      {item.food.foodName} - ${item.food.price.toFixed(2)} x{" "}
+                      {item.quantity} ={" "}
+                      <span className="font-medium text-orange-400">
+                        ${(item.food.price * item.quantity).toFixed(2)}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {typeof item.food.ingredients === "string"
+                        ? item.food.ingredients
+                        : "Not specified"}
+                    </p>
+                  </div>
+                  <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => handleDecreaseQuantity(item.food._id)}
+                      disabled={loading}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 disabled:bg-gray-500 transition-all duration-300"
+                    >
+                      -
+                    </button>
+                    <button
+                      onClick={() => handleIncreaseQuantity(item.food._id)}
+                      disabled={loading}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 disabled:bg-gray-500 transition-all duration-300"
+                    >
+                      +
+                    </button>
+                    <button
+                      onClick={() => handleDeleteFood(item.food._id)}
+                      disabled={loading}
+                      className="px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 disabled:bg-gray-500 transition-all duration-300"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <p className="text-xl font-bold text-white mt-4">
+                Total:{" "}
+                <span className="text-orange-400">
+                  ${totalPrice.toFixed(2)}
+                </span>
+              </p>
+              {error && <p className="text-red-400 mt-2">{error}</p>}
+              <div className="flex justify-between mt-6">
+                <button
+                  onClick={() => setReviewCardOpen(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createOrder}
+                  disabled={loading || selectedFoods.length === 0}
+                  className="px-4 py-2 bg-orange-500 text-white rounded-full hover:bg-orange-600 disabled:bg-gray-500 transition-all duration-300"
+                >
+                  {loading ? "Processing..." : "Place Order"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {createdOrders.length > 0 && (
           <div className="mt-10 bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg">
