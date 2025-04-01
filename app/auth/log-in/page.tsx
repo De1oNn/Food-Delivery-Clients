@@ -123,9 +123,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Left Half: Form with Slideshow Background */}
       <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Left Slideshow */}
         <div className="absolute inset-0">
           {leftBackgroundImages.map((src, index) => (
             <Image
@@ -221,9 +219,6 @@ export default function Login() {
             />
           ))}
         </div>
-        {/* Overlay Gradient */}
-        {/* <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" /> */}
-        {/* Scrollable Menu Overlay */}
         <div className="relative z-10 w-full h-[70vh] flex flex-col items-center justify-center p-6">
           <h2 className="text-3xl font-bold text-orange-400 mb-4 text-center drop-shadow-md">
             Our Menu
