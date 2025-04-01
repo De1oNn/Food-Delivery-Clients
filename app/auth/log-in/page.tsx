@@ -4,16 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-// Define the Food type based on your foodModel schema
-interface Food {
-  _id: string;
-  foodName: string;
-  price: number;
-  image?: string;
-  ingredients?: string;
-  category?: { name: string } | null;
-}
-
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");

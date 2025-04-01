@@ -3,15 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-interface User {
-  _id: string;
-  email: string;
-  name: string;
-  phoneNumber: string;
-  createdAt?: string;
-  profilePicture?: string;
-}
-
 export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState("");

@@ -6,58 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, ShoppingCart, MapPin, Settings } from "lucide-react";
 import axios from "axios";
 
-interface User {
-  _id: string;
-  email: string;
-  name: string;
-  phoneNumber: string;
-  createdAt?: string;
-}
-
-interface Food {
-  _id: string;
-  foodName: string;
-  price: number;
-  image: string;
-  ingredients: string;
-  category: { _id: string; categoryName: string } | string;
-}
-
-interface SelectedFood {
-  food: Food;
-  quantity: number;
-}
-
-interface Notification {
-  _id: string;
-  message: string;
-  createdAt: string;
-}
-
-interface Restaurant {
-  _id: string;
-  location: string;
-  picture: string;
-  name: string;
-  information: string;
-  phoneNumber: number;
-  createdAt: string;
-}
-
-interface FoodOrderItem {
-  food: Food | null;
-  quantity: number;
-}
-
-interface Order {
-  _id: string;
-  user: { name: string };
-  email?: string;
-  foodOrderItems: FoodOrderItem[];
-  createdAt: string;
-  status: "PENDING" | "CANCELED" | "DELIVERED";
-}
-
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [foods, setFoods] = useState<Food[]>([]);

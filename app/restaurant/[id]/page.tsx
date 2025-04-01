@@ -5,16 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 
-interface Restaurant {
-  _id: string;
-  location: string;
-  picture: string;
-  name: string;
-  information: string;
-  phoneNumber: number;
-  createdAt: string;
-}
-
 export default function RestaurantPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
