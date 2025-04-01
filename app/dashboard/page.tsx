@@ -23,6 +23,8 @@ export default function Dashboard() {
   const [restaurantError, setRestaurantError] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderLoading, setOrderLoading] = useState<boolean>(false);
+  
+    const [createdOrders, setCreatedOrders] = useState<Order[]>([]);
 
   const router = useRouter();
 
