@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Marquee from "react-fast-marquee";
 
 export default function Login() {
   const router = useRouter();
@@ -127,6 +128,7 @@ export default function Login() {
     <div className="min-h-screen flex bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
         <div className="absolute inset-0">
+          <Marquee className="p-4">Welcome</Marquee>
           {leftBackgroundImages.map((src, index) => (
             <Image
               key={index}
@@ -140,7 +142,6 @@ export default function Login() {
             />
           ))}
         </div>
-        {/* Form Card */}
         <div className="relative z-10 max-w-md w-full bg-gray-800/50 backdrop-blur-lg p-8 rounded-xl shadow-lg border border-gray-700/50">
           <h1 className="text-4xl font-extrabold text-center text-orange-400 mb-6">
             Welcome back!
@@ -206,6 +207,7 @@ export default function Login() {
 
       <div className="hidden md:flex flex-1 relative overflow-hidden fles justify-center items-center">
         <div className="absolute inset-0">
+          <Marquee className="p-4">Welcome</Marquee>
           {rightBackgroundImages.map((src, index) => (
             <Image
               key={index}
@@ -233,13 +235,13 @@ export default function Login() {
                   >
                     {food.image && (
                       <div className="flex-shrink-0">
-                        <Image
+                        {/* <Image
                           src={food.image}
                           alt={food.foodName}
                           width={50}
                           height={50}
                           className="rounded-full object-cover border-2 border-orange-500/50"
-                        />
+                        /> */}
                       </div>
                     )}
                     <div className="flex-1">

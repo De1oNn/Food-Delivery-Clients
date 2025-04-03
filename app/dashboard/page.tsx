@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, ShoppingCart, MapPin, Settings } from "lucide-react";
 import axios from "axios";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { CircleX } from "lucide-react";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -16,16 +23,13 @@ export default function Dashboard() {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isNotifOpen, setIsNotifOpen] = useState<boolean>(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isRestaurantModalOpen, setIsRestaurantModalOpen] =
-    useState<boolean>(false);
+  const [isRestaurantModalOpen, setIsRestaurantModalOpen] =useState<boolean>(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [restaurantLoading, setRestaurantLoading] = useState<boolean>(false);
   const [restaurantError, setRestaurantError] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderLoading, setOrderLoading] = useState<boolean>(false);
-  
-    const [createdOrders, setCreatedOrders] = useState<Order[]>([]);
-
+  const [createdOrders, setCreatedOrders] = useState<Order[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -62,7 +66,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (isCartOpen && user) {
-      fetchOrders(user.name); // Refresh orders when cart opens
+      fetchOrders(user.name); 
     }
   }, [isCartOpen, user]);
 
@@ -204,51 +208,91 @@ const fetchOrders = async (username: string) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Sidebar */}
-      <aside className="fixed top-0 left-0 h-full w-[100px] bg-orange-600 shadow-lg flex flex-col items-center py-6 space-y-8 z-10">
-        <div
-          className="flex items-center gap-3 cursor-pointer group"
-          onClick={navigateToProfile}
-        >
-          <Avatar className="h-12 w-12 ring-2 ring-orange-500 ring-offset-2 ring-offset-gray-800">
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-            <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
-          </Avatar>
-        </div>
-        <div className="relative">
-          <Bell
-            className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
-            onClick={() => {
-              setIsNotifOpen(!isNotifOpen);
-              fetchNotifications();
-            }}
-          />
-          {notifications.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-              {notifications.length}
-            </span>
-          )}
-        </div>
-        <ShoppingCart
-          className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
-          onClick={() => {
-            setIsCartOpen(!isCartOpen);
-            if (user) fetchOrders(user.name); // Ensure orders are fresh
-          }}
-        />
-        <MapPin
-          className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
-          onClick={() => setIsRestaurantModalOpen(true)}
-        />
-        <Settings
-          className="h-6 w-6 hover:text-orange-300 cursor-pointer transition-colors"
-          onClick={navigateToSettings}
-        />
-      </aside>
+      <div className="flex">
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="item-1" className="border-none">
 
-      {/* Main Content */}
+            <AccordionTrigger className="p-5 h-[112px] w-[112px] hover:no-underline focus:outline-none">
+              <div className="flex items-center justify-center p-2 transition-transform duration-200 hover:scale-105">
+                <Avatar className="h-14 w-14 ring-2 ring-orange-500 ring-offset-2 ring-offset-gray-900 transition-all duration-300 hover:ring-orange-400">
+                  <AvatarImage
+                    src="https://github.com/shadcn.png"
+                    alt="@shadcn"
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-gray-700 text-white text-lg font-semibold">
+                    {user?.name?.[0] || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="mt-2">
+              <aside className="fixed top-0 left-0 h-full w-24 bg-gradient-to-b from-orange-600 to-orange-700 shadow-xl flex flex-col items-center py-8 space-y-10 z-50 transition-all duration-300">
+                {/* Close Button */}
+                <AccordionTrigger className="p-2 rounded-full hover:bg-orange-800/50 transition-colors duration-200">
+                  <CircleX className="h-6 w-6 text-white hover:text-orange-200" />
+                </AccordionTrigger>
+
+                {/* Profile Avatar */}
+                <div
+                  className="flex items-center gap-3 cursor-pointer group"
+                  onClick={navigateToProfile}
+                >
+                  <Avatar className="h-12 w-12 ring-2 ring-orange-400 ring-offset-2 ring-offset-orange-800 transition-transform duration-300 group-hover:scale-110 group-hover:ring-orange-300">
+                    <AvatarImage
+                      src="https://github.com/shadcn.png"
+                      alt="@shadcn"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-gray-700 text-white text-lg font-semibold">
+                      {user?.name?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+
+                {/* Notification Icon */}
+                <div className="relative group">
+                  <Bell
+                    className="h-7 w-7 text-white hover:text-orange-200 cursor-pointer transition-colors duration-200 group-hover:scale-110"
+                    onClick={() => {
+                      setIsNotifOpen(!isNotifOpen);
+                      fetchNotifications();
+                    }}
+                  />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-md animate-pulse">
+                      {notifications.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* Cart Icon */}
+                <ShoppingCart
+                  className="h-7 w-7 text-white hover:text-orange-200 cursor-pointer transition-colors duration-200 hover:scale-110"
+                  onClick={() => {
+                    setIsCartOpen(!isCartOpen);
+                    if (user) fetchOrders(user.name);
+                  }}
+                />
+
+                {/* Map Pin Icon */}
+                <MapPin
+                  className="h-7 w-7 text-white hover:text-orange-200 cursor-pointer transition-colors duration-200 hover:scale-110"
+                  onClick={() => setIsRestaurantModalOpen(true)}
+                />
+
+                {/* Settings Icon */}
+                <Settings
+                  className="h-7 w-7 text-white hover:text-orange-200 cursor-pointer transition-colors duration-200 hover:scale-110"
+                  onClick={navigateToSettings}
+                />
+              </aside>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+
       <div className="ml-[100px] p-6 relative">
-        {/* Header */}
         <header className="bg-gray-800/50 backdrop-blur-lg rounded-xl shadow-lg p-4 flex justify-center items-center mb-6">
           <div className="relative flex items-center w-full max-w-md">
             <input
@@ -275,9 +319,7 @@ const fetchOrders = async (username: string) => {
           </div>
         </header>
 
-        {/* Main Section */}
         <main className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] relative">
-          {/* Background Logo */}
           <div className="background-logo" />
 
           {loading ? (
@@ -357,7 +399,6 @@ const fetchOrders = async (username: string) => {
                 </div>
               )}
 
-              {/* Infinite Scrolling Restaurant Marquee */}
               {restaurants.length > 0 && (
                 <div className="overflow-hidden mt-8">
                   <div className="marquee-title">
