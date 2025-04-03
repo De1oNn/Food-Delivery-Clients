@@ -91,7 +91,7 @@ export default function Login() {
 
     try {
       const response = await fetch(
-        "http://food-delivery-back-end-three.vercel.app/auth/log-in",
+        "https://food-delivery-back-end-three.vercel.app/auth/log-in",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

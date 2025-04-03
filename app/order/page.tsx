@@ -60,7 +60,7 @@ export default function Order() {
     try {
       setLoading(true);
       const res = await axios.get<{ message: string; categories: Category[] }>(
-        "http://food-delivery-back-end-three.vercel.app/food-category"
+        "https://food-delivery-back-end-three.vercel.app/food-category"
       );
       const fetchedCategories = res.data.categories || [];
       setCategories(fetchedCategories);
@@ -79,7 +79,7 @@ export default function Order() {
     try {
       setLoading(true);
       const res = await axios.get<{ foods: Food[] }>(
-        "http://food-delivery-back-end-three.vercel.app/food"
+        "https://food-delivery-back-end-three.vercel.app/food"
       );
       const fetchedFoods = res.data.foods || [];
       setFoods(fetchedFoods);
@@ -161,7 +161,7 @@ export default function Order() {
       };
 
       const res = await axios.post<{ message: string; order: Order }>(
-        "http://food-delivery-back-end-three.vercel.app/order",
+        "https://food-delivery-back-end-three.vercel.app/order",
         orderData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
