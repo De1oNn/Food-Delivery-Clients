@@ -15,60 +15,59 @@ export default function Login() {
   const [rightImageIndex, setRightImageIndex] = useState(0);
   const [foods, setFoods] = useState<Food[]>([]);
 
-  // Left half background images (behind the form)
   const leftBackgroundImages = [
     "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
     "https://images.unsplash.com/photo-1504672281656-e3e7b0ae83ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
     "https://images.unsplash.com/photo-1565299624946-baccd305181c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
   ];
-
-  // Right half background images (behind the menu)
   const rightBackgroundImages = [
     "https://images.unsplash.com/photo-1556911220-bff31c812dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
     "https://images.unsplash.com/photo-1511690656952-34372de2f617?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
     "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
   ];
 
-  // Auto-swipe for left half
   useEffect(() => {
     const interval = setInterval(() => {
       setLeftImageIndex(
         (prevIndex) => (prevIndex + 1) % leftBackgroundImages.length
       );
-    }, 2000); // 2 seconds
+    }, 2000);
     return () => clearInterval(interval);
   }, [leftBackgroundImages.length]);
 
-  // Auto-swipe for right half
   useEffect(() => {
     const interval = setInterval(() => {
       setRightImageIndex(
         (prevIndex) => (prevIndex + 1) % rightBackgroundImages.length
       );
-    }, 2000); // 2 seconds
+    }, 2000);
     return () => clearInterval(interval);
   }, [rightBackgroundImages.length]);
 
-  // Fetch foods from the backend
-  useEffect(() => {
-    const fetchFoods = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/food", {
+  const fetchFoods = async () => {
+    try {
+      const response = await fetch(
+        "https://food-delivery-back-end-three.vercel.app/food",
+        {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        });
-        const data = await response.json();
-        if (response.ok && Array.isArray(data.foods)) {
-          setFoods(data.foods); // Show all foods
-        } else {
-          console.error("Failed to fetch foods:", data.message);
-          setFoods([]);
         }
-      } catch (err) {
-        console.error("Error fetching foods:", err);
+      );
+      console.log(response, `AAAAA`);
+      const data = await response.json();
+      if (response.ok && Array.isArray(data.foods)) {
+        setFoods(data.foods);
+      } else {
+        console.error("Failed to fetch foods:", data.message);
         setFoods([]);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching foods:", err);
+      setFoods([]);
+    }
+  };
+
+  useEffect(() => {
     fetchFoods();
   }, []);
 
@@ -91,11 +90,14 @@ export default function Login() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/auth/log-in", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        "http://localhost:5000/auth/log-in",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -202,9 +204,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right Half: Slideshow with Overlay Menu */}
       <div className="hidden md:flex flex-1 relative overflow-hidden fles justify-center items-center">
-        {/* Right Slideshow Background */}
         <div className="absolute inset-0">
           {rightBackgroundImages.map((src, index) => (
             <Image

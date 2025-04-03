@@ -60,7 +60,7 @@ export default function Order() {
     try {
       setLoading(true);
       const res = await axios.get<{ message: string; categories: Category[] }>(
-        "http://localhost:5000/food-category"
+        "http://food-delivery-back-end-three.vercel.app/food-category"
       );
       const fetchedCategories = res.data.categories || [];
       setCategories(fetchedCategories);
@@ -79,7 +79,7 @@ export default function Order() {
     try {
       setLoading(true);
       const res = await axios.get<{ foods: Food[] }>(
-        "http://localhost:5000/food"
+        "http://food-delivery-back-end-three.vercel.app/food"
       );
       const fetchedFoods = res.data.foods || [];
       setFoods(fetchedFoods);
@@ -161,7 +161,7 @@ export default function Order() {
       };
 
       const res = await axios.post<{ message: string; order: Order }>(
-        "http://localhost:5000/order",
+        "http://food-delivery-back-end-three.vercel.app/order",
         orderData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -169,7 +169,7 @@ export default function Order() {
       setCreatedOrders((prevOrders) => [...prevOrders, res.data.order]);
       setSelectedFoods([]);
       setTotalPrice(0);
-      setReviewCardOpen(false); // Close review card after placing order
+      setReviewCardOpen(false); 
       alert(res.data.message);
     } catch (error) {
       console.error("Error creating order:", error);

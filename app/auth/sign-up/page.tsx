@@ -54,10 +54,13 @@ export default function Signup() {
   useEffect(() => {
     const fetchFoods = async () => {
       try {
-        const response = await fetch("http://localhost:5000/food", {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await fetch(
+          "http://food-delivery-back-end-three.vercel.app/food",
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
         const data = await response.json();
         if (response.ok && Array.isArray(data.foods)) {
           setFoods(data.foods); // Show all foods
@@ -85,11 +88,14 @@ export default function Signup() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/auth/sign-up", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name, phoneNumber }),
-      });
+      const response = await fetch(
+        "http://food-delivery-back-end-three.vercel.app/auth/sign-up",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, name, phoneNumber }),
+        }
+      );
 
       const data = await response.json();
 

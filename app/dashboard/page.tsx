@@ -73,7 +73,9 @@ const fetchOrders = async (username: string) => {
     if (!token) throw new Error("No token found");
 
     const response = await axios.get<{ orders: Order[] }>(
-      `http://localhost:5000/order?username=${encodeURIComponent(username)}`,
+      `http://food-delivery-back-end-three.vercel.app/order?username=${encodeURIComponent(
+        username
+      )}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -100,7 +102,7 @@ const fetchOrders = async (username: string) => {
     try {
       setLoading(true);
       const res = await axios.get<{ foods: Food[] }>(
-        "http://localhost:5000/food"
+        "http://food-delivery-back-end-three.vercel.app/food"
       );
       setFoods(res.data.foods || []);
     } catch (error) {
@@ -115,7 +117,7 @@ const fetchOrders = async (username: string) => {
     setRestaurantError(null);
     try {
       const res = await axios.get<{ restaurants: Restaurant[] }>(
-        "http://localhost:5000/restaurant"
+        "http://food-delivery-back-end-three.vercel.app/restaurant"
       );
       setRestaurants(res.data.restaurants || []);
     } catch (error: any) {
@@ -131,7 +133,7 @@ const fetchOrders = async (username: string) => {
   const fetchNotifications = async () => {
     try {
       const res = await axios.get<{ notifications: Notification[] }>(
-        "http://localhost:5000/notif"
+        "http://food-delivery-back-end-three.vercel.app/notif"
       );
       setNotifications(res.data.notifications || []);
     } catch (error) {
@@ -393,7 +395,7 @@ const fetchOrders = async (username: string) => {
           )}
         </main>
 
-        {/* Cart Modal - Now showing Orders */}
+        {/* Cart Modal*/}
         {isCartOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20">
             <div className="bg-gray-800/50 backdrop-blur-md p-6 rounded-xl shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
