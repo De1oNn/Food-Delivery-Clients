@@ -86,18 +86,21 @@ export default function Profile() {
         },
       });
 
-      const response = await fetch("http://localhost:5000/auth/update-user", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          name: formData.name,
-          phoneNumber: formData.phoneNumber,
-        }),
-      });
+      const response = await fetch(
+        "https://food-delivery-back-end-three.vercel.app/auth/update-user",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            name: formData.name,
+            phoneNumber: formData.phoneNumber,
+          }),
+        }
+      );
 
       const data = await response.json();
       console.log("Response from server:", { status: response.status, data });
@@ -144,7 +147,7 @@ export default function Profile() {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:5000/auth/delete-profile-picture",
+        "https://food-delivery-back-end-three.vercel.app/auth/delete-profile-picture",
         {
           method: "DELETE",
           headers: {
@@ -185,7 +188,7 @@ export default function Profile() {
       formData.append("profilePicture", file);
 
       const response = await fetch(
-        "http://localhost:5000/auth/update-profile-picture",
+        "https://food-delivery-back-end-three.vercel.app/auth/update-profile-picture",
         {
           method: "PUT",
           headers: {

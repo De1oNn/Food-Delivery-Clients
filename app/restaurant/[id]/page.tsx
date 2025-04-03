@@ -17,7 +17,7 @@ export default function RestaurantPage() {
       try {
         setLoading(true);
         const res = await axios.get<{ restaurant: Restaurant }>(
-          `http://food-delivery-back-end-three.vercel.app/restaurant/${id}`
+          `https://food-delivery-back-end-three.vercel.app/restaurant/${id}`
         );
         setRestaurant(res.data.restaurant);
       } catch (error: any) {
