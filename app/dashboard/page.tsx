@@ -211,29 +211,53 @@ const fetchOrders = async (username: string) => {
       <div className="flex">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1" className="border-none">
-
-            <AccordionTrigger className="p-5 h-[112px] w-[112px] hover:no-underline focus:outline-none">
-              <div className="flex items-center justify-center p-2 transition-transform duration-200 hover:scale-105">
-                <Avatar className="h-14 w-14 ring-2 ring-orange-500 ring-offset-2 ring-offset-gray-900 transition-all duration-300 hover:ring-orange-400">
-                  <AvatarImage
-                    src="https://github.com/shadcn.png"
-                    alt="@shadcn"
-                    className="object-cover"
+            <div className="flex w-screen">
+              <AccordionTrigger className="p-5 h-[112px] w-[112px] hover:no-underline focus:outline-none">
+                <div className="flex items-center justify-center p-2 transition-transform duration-200 hover:scale-105">
+                  <Avatar className="h-14 w-14 ring-2 ring-orange-500 ring-offset-2 ring-offset-gray-900 transition-all duration-300 hover:ring-orange-400">
+                    <AvatarImage
+                      src="https://github.com/shadcn.png"
+                      alt="@shadcn"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-gray-700 text-white text-lg font-semibold">
+                      {user?.name?.[0] || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </AccordionTrigger>
+              <header className="bg-gray-800/50 backdrop-blur-lg rounded-xl shadow-lg p-4 flex justify-center items-center mb-6 w-full">
+                <div className="relative flex items-center w-full max-w-md">
+                  <input
+                    placeholder="Search for food..."
+                    type="search"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="w-full h-12 px-5 pr-10 bg-gray-700/70 text-white placeholder-gray-400 rounded-full border-2 border-gray-600 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition-all duration-300"
                   />
-                  <AvatarFallback className="bg-gray-700 text-white text-lg font-semibold">
-                    {user?.name?.[0] || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-            </AccordionTrigger>
+                  <svg
+                    className="absolute right-3 w-5 h-5 text-gray-400 hover:text-orange-500 transition-colors duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+              </header>
+            </div>
             <AccordionContent className="mt-2">
               <aside className="fixed top-0 left-0 h-full w-24 bg-gradient-to-b from-orange-600 to-orange-700 shadow-xl flex flex-col items-center py-8 space-y-10 z-50 transition-all duration-300">
-                {/* Close Button */}
                 <AccordionTrigger className="p-2 rounded-full hover:bg-orange-800/50 transition-colors duration-200">
                   <CircleX className="h-6 w-6 text-white hover:text-orange-200" />
                 </AccordionTrigger>
 
-                {/* Profile Avatar */}
                 <div
                   className="flex items-center gap-3 cursor-pointer group"
                   onClick={navigateToProfile}
@@ -250,7 +274,6 @@ const fetchOrders = async (username: string) => {
                   </Avatar>
                 </div>
 
-                {/* Notification Icon */}
                 <div className="relative group">
                   <Bell
                     className="h-7 w-7 text-white hover:text-orange-200 cursor-pointer transition-colors duration-200 group-hover:scale-110"
@@ -266,7 +289,6 @@ const fetchOrders = async (username: string) => {
                   )}
                 </div>
 
-                {/* Cart Icon */}
                 <ShoppingCart
                   className="h-7 w-7 text-white hover:text-orange-200 cursor-pointer transition-colors duration-200 hover:scale-110"
                   onClick={() => {
@@ -275,13 +297,11 @@ const fetchOrders = async (username: string) => {
                   }}
                 />
 
-                {/* Map Pin Icon */}
                 <MapPin
                   className="h-7 w-7 text-white hover:text-orange-200 cursor-pointer transition-colors duration-200 hover:scale-110"
                   onClick={() => setIsRestaurantModalOpen(true)}
                 />
 
-                {/* Settings Icon */}
                 <Settings
                   className="h-7 w-7 text-white hover:text-orange-200 cursor-pointer transition-colors duration-200 hover:scale-110"
                   onClick={navigateToSettings}
@@ -293,7 +313,7 @@ const fetchOrders = async (username: string) => {
       </div>
 
       <div className="ml-[100px] p-6 relative">
-        <header className="bg-gray-800/50 backdrop-blur-lg rounded-xl shadow-lg p-4 flex justify-center items-center mb-6">
+        {/* <header className="bg-gray-800/50 backdrop-blur-lg rounded-xl shadow-lg p-4 flex justify-center items-center mb-6">
           <div className="relative flex items-center w-full max-w-md">
             <input
               placeholder="Search for food..."
@@ -317,7 +337,7 @@ const fetchOrders = async (username: string) => {
               />
             </svg>
           </div>
-        </header>
+        </header> */}
 
         <main className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] relative">
           <div className="background-logo" />

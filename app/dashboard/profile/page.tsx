@@ -221,7 +221,6 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-md rounded-xl shadow-2xl p-6 relative">
-        {/* Back Button */}
         <button
           onClick={backDashboard}
           className="absolute top-4 left-4 h-10 w-10 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-all duration-300"
@@ -247,7 +246,6 @@ export default function Profile() {
           </p>
         ) : user ? (
           <div className="space-y-6">
-            {/* Profile Picture Section */}
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 {user.profilePicture ? (

@@ -17,37 +17,33 @@ export default function Signup() {
   const [rightImageIndex, setRightImageIndex] = useState(0);
     const [foods, setFoods] = useState<Food[]>([]);
 
-  // Left half background images (behind the form)
   const leftBackgroundImages = [
     "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
     "https://images.unsplash.com/photo-1504672281656-e3e7b0ae83ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
     "https://images.unsplash.com/photo-1565299624946-baccd305181c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
   ];
 
-  // Right half background images
   const rightBackgroundImages = [
     "https://images.unsplash.com/photo-1556911220-bff31c812dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
     "https://images.unsplash.com/photo-1511690656952-34372de2f617?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
     "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
   ];
 
-  // Auto-swipe for left half
   useEffect(() => {
     const interval = setInterval(() => {
       setLeftImageIndex(
         (prevIndex) => (prevIndex + 1) % leftBackgroundImages.length
       );
-    }, 2000); // 2 seconds
+    }, 2000);
     return () => clearInterval(interval);
   }, [leftBackgroundImages.length]);
 
-  // Auto-swipe for right half
   useEffect(() => {
     const interval = setInterval(() => {
       setRightImageIndex(
         (prevIndex) => (prevIndex + 1) % rightBackgroundImages.length
       );
-    }, 2000); // 2 seconds
+    }, 2000);
     return () => clearInterval(interval);
   }, [rightBackgroundImages.length]);
 
@@ -230,9 +226,7 @@ export default function Signup() {
         </div>
       </div>
 
-      {/* Right Half: Slideshow Background */}
       <div className="hidden md:flex flex-1 relative overflow-hidden flex justify-center items-center">
-        {/* Right Slideshow */}
         <div className="absolute inset-0">
           {rightBackgroundImages.map((src, index) => (
             <Image
@@ -262,13 +256,13 @@ export default function Signup() {
                   >
                     {food.image && (
                       <div className="flex-shrink-0">
-                        <Image
+                        {/* <Image
                           src={food.image}
                           alt={food.foodName}
                           width={50}
                           height={50}
                           className="rounded-full object-cover border-2 border-orange-500/50"
-                        />
+                        /> */}
                       </div>
                     )}
                     <div className="flex-1">

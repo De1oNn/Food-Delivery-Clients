@@ -18,7 +18,6 @@ export default function FaceAddress() {
 
   return (
     <div className="h-screen w-full flex justify-center items-center relative overflow-hidden">
-      {/* Background Image */}
       <div className="absolute inset-0 w-full h-full">
         <Image
           src={food}
@@ -27,12 +26,10 @@ export default function FaceAddress() {
           alt="Food"
           className="opacity-70"
         />
-        <div className="absolute inset-0 bg-black/30"></div> {/* Overlay */}
+        <div className="absolute inset-0 bg-black/30"></div> 
       </div>
 
-      {/* Content Container */}
       <div className="relative z-10 w-[400px] bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8">
-        {/* Section 1 */}
         {currentSection === 0 && (
           <div className="flex flex-col items-center text-center space-y-6">
             <h1 className="text-3xl font-bold text-gray-800">
@@ -55,7 +52,6 @@ export default function FaceAddress() {
           </div>
         )}
 
-        {/* Section 2 */}
         {currentSection === 1 && (
           <div className="flex flex-col items-center text-center space-y-6">
             <h1 className="text-3xl font-bold text-gray-800">Quick & Fresh</h1>
@@ -84,7 +80,6 @@ export default function FaceAddress() {
           </div>
         )}
 
-        {/* Section 3 */}
         {currentSection === 2 && (
           <div className="flex flex-col items-center text-center space-y-6">
             <h1 className="text-3xl font-bold text-gray-800">Join Now!</h1>
